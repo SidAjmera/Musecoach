@@ -323,22 +323,6 @@ export default function Review({
           ))}
         </section>
       )}
-      <section className="panel benchmark">
-        <h3>How does this compare with the world?</h3>
-        <p>
-          Worldwide percentile unavailable. A credible “Top X%” needs a
-          representative population tested with the same tasks, recording
-          conditions, and scoring method. Published studies use different
-          measures; they don’t calibrate this app’s practice indicator.
-        </p>
-        <a
-          href="https://ubwp.buffalo.edu/apal-pfordresher/wp-content/uploads/sites/79/2022/01/PfordresherDemorest_2021_JRME.pdf"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Read the singing-accuracy research ↗
-        </a>
-      </section>
       {session.title === "Range exploration" && a.range && onRange && (
         <section className="panel">
           <h3>A starting point for comfortable practice</h3>

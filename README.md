@@ -47,10 +47,6 @@ The build uses webpack for compatibility with this Windows environment. The test
 
 Scores are deterministic for the same decoded samples and context, independent of coach. Missing metrics are omitted. Sparse, silent, or insufficiently confident recordings remain in history with an unscored result and recovery advice. No claims are made about breath technique, vocal health, vocal type, lyric accuracy, tone quality, or emotional intent.
 
-### Worldwide percentiles
-
-The review intentionally says **Worldwide percentile unavailable**. No representative worldwide dataset calibrated to these tasks, microphone conditions, and scoring functions was established. [Pfordresher & Demorest's study of accurate singing](https://ubwp.buffalo.edu/apal-pfordresher/wp-content/uploads/sites/79/2022/01/PfordresherDemorest_2021_JRME.pdf) uses a different pitch-imitation protocol. Its population estimates cannot credibly be converted into “Top X% of the world” for an arbitrary recording or this app's steadiness indicator. Such a claim would require a validated task-matched benchmark, not an invented transformation of the score.
-
 ## Bring your own API key
 
 Each visitor opens **My Coach → Bring your own API key**, selects Gemini, OpenAI, Anthropic, or Grok, enters their own API key, and clicks **Save AI connection**. A model ID can override the provider default. Saving is local and makes no provider request; credentials and model access are checked only when the user explicitly sends a message. The user's provider account handles API usage and billing; free-tier limits and model access depend on that account. Chat subscriptions do not necessarily include API credits.

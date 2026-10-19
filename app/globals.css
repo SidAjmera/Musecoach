@@ -1472,18 +1472,6 @@ details p {
   font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
-.benchmark p {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 14px;
-}
-.benchmark a {
-  display: block;
-  text-decoration: underline;
-  font-size: 11px;
-  color: var(--green);
-  margin-top: 11px;
-}
 .session-heading {
   margin: 0 0 24px;
 }
