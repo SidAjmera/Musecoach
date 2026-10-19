@@ -1,6 +1,14 @@
 # Musecoach
 
-A local-first singing practice studio built with Next.js, TypeScript, React, Tailwind CSS, Web Audio, MediaRecorder, and IndexedDB. No sign-up, paid service, or AI key is needed for recording, measurement, exercises, or history.
+A singing practice website for desktop and mobile, built with Next.js, TypeScript, React, Tailwind CSS, Web Audio, MediaRecorder, and IndexedDB. Open the hosted HTTPS link on any supported device; visitors do not need to run a server. Recording, measurements, exercises, and history work without an AI key. Recordings and history stay in each visitor’s browser; optional AI conversations use their own provider key.
+
+## Free online hosting
+
+The app is configured for Vercel’s **Hobby** plan, a free plan for personal, non-commercial projects. Use its included HTTPS subdomain; no paid domain, shared AI key, paid database, or storage add-on is needed. Hosting usage limits apply: service can pause at the free limit rather than incur overage charges. Do not choose a Pro trial, paid upgrade, or paid integration. See the [Hobby plan terms and limits](https://vercel.com/docs/plans/hobby).
+
+Import this GitHub repository into a Hobby project, using the repository root and the detected Next.js framework. `vercel.json` enables Corepack for the pinned pnpm version and uses the existing production build. Node.js is pinned to 24.x. The AI route runs as a Node.js function with a 45-second ceiling, allowing for the provider’s 30-second request timeout. No AI environment variables are required for the four built-in providers. Once linked to GitHub, pushes to the production branch can deploy automatically.
+
+Share the production HTTPS URL with visitors. Mobile microphone access uses the browser permission prompt; opening the site in Safari or Chrome is preferable to an embedded social-media browser. Practice records are private to that browser/device and do not sync between phones or computers. Online hosting and on-device audio processing work together; this app does not need a cloud recording database.
 
 ## Run locally
 
@@ -11,7 +19,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open [Musecoach](http://127.0.0.1:3000). The server binds to loopback only. Microphone access needs localhost or HTTPS. A mobile device requires its own HTTPS development setup; this project is not published.
+Open [Musecoach](http://127.0.0.1:3000) for development. The development server binds to loopback only. For phones and shared access, use the deployed HTTPS URL. Microphone access needs localhost or HTTPS.
 
 ```sh
 pnpm test          # Signal, scoring, lifecycle, validation, comparison, voice, AI tests

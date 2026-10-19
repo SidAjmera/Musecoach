@@ -1,4 +1,6 @@
 import { answerBYOK, byokOptions } from "@/lib/byok-server";
+export const runtime = "nodejs";
+export const maxDuration = 45;
 const headers = { "Cache-Control": "no-store", Pragma: "no-cache" };
 function json(body: unknown, init: ResponseInit = {}) {
   return Response.json(body, { ...init, headers });
