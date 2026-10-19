@@ -81,7 +81,7 @@ test("BYOK saves only by opt-in, survives navigation and forgets keys", async ({
   const otherContext = await page.context().browser()!.newContext();
   try {
     const other = await otherContext.newPage();
-    await other.goto("http://127.0.0.1:3000/coach");
+    await other.goto(new URL("/coach", page.url()).href);
     await other
       .getByRole("button", { name: "Explore first", exact: true })
       .click();

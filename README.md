@@ -1,5 +1,7 @@
 # Musecoach
 
+**Live website:** [musecoach.vercel.app](https://musecoach.vercel.app/) — open this link on desktop or mobile.
+
 A singing practice website for desktop and mobile, built with Next.js, TypeScript, React, Tailwind CSS, Web Audio, MediaRecorder, and IndexedDB. Open the hosted HTTPS link on any supported device; visitors do not need to run a server. Recording, measurements, exercises, and history work without an AI key. Recordings and history stay in each visitor’s browser; optional AI conversations use their own provider key.
 
 ## Free online hosting
@@ -30,6 +32,8 @@ pnpm test:e2e     # Production build must exist; starts a server when needed
 ```
 
 The build uses webpack for compatibility with this Windows environment. The test configuration uses locally installed Chrome; install Chrome or change `channel` in `playwright.config.ts` to a Playwright-managed browser. Tests use generated PCM WAV fixtures and Chrome's fake microphone flags. They never request a physical microphone. Browser traces and failure details go to `test-results/`; visual snapshots go to `artifacts/`.
+
+Set `PLAYWRIGHT_BASE_URL=https://musecoach.vercel.app` when running browser checks against the hosted site. This skips starting a local server and uses the public HTTPS origin. The browser checks use disposable profiles, generated audio fixtures, and mocked provider replies; no real API keys are needed.
 
 ## What works
 

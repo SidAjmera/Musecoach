@@ -362,7 +362,7 @@ test("main screens have accessible layouts, keyboard focus, and visual snapshots
           exact: true,
         })
         .click();
-    await expect(page).toHaveURL("http://127.0.0.1:3000" + path);
+    await expect(page).toHaveURL(new URL(path, page.url()).href);
     await expect(page).toHaveTitle(/Musecoach/);
     await expect(page.locator("#page-title")).toBeVisible();
     expect(
@@ -417,7 +417,7 @@ test("main screens have accessible layouts, keyboard focus, and visual snapshots
     if (name !== "progress")
       await page.getByRole("link", { name: label, exact: true }).click();
     const darkPath = name === "home" ? "/" : "/" + name;
-    await expect(page).toHaveURL("http://127.0.0.1:3000" + darkPath);
+    await expect(page).toHaveURL(new URL(darkPath, page.url()).href);
     await expect(page).toHaveTitle(/Musecoach/);
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     const dark = await new AxeBuilder({ page })

@@ -655,12 +655,16 @@ function Practice({
   onRange: () => void;
   onSelect: (k: ExerciseKind) => void;
 }) {
-  const selected = ["match", "hold", "melody"].includes(kind) ? kind : "hold",
+  const routeSelection = ["match", "hold", "melody"].includes(kind)
+    ? kind
+    : "hold";
+  const [selected, setSelected] = useState<ExerciseKind>(routeSelection),
     [base, setBase] = useState(
       Math.max(profile.low, Math.min(60, profile.high - 4)),
     ),
     [error, setError] = useState("");
   const current = exerciseInfo[selected];
+  useEffect(() => setSelected(routeSelection), [routeSelection]);
   useEffect(() => {
     setBase((value) =>
       Math.max(
@@ -678,6 +682,7 @@ function Practice({
             className={`chip ${selected === k ? "selected" : ""}`}
             aria-pressed={selected === k}
             onClick={() => {
+              setSelected(k);
               onSelect(k);
               setError("");
             }}
