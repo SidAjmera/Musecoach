@@ -90,17 +90,16 @@ export default function ExerciseDesigner({
             low: profile.low,
             high: profile.high,
           },
-          sessions: sessions
-            .slice(0, 5)
-            .map((session) => ({
-              date: session.date,
-              context: session.context,
-              analysisVersion: session.analysis.version,
-              metrics: session.analysis.metrics,
-              score: session.analysis.score,
-              improvements: session.analysis.improvements.slice(0, 3),
-              completedExercise: session.analysis.exercise,
-            })),
+          sessions: sessions.slice(0, 5).map((session) => ({
+            date: session.date,
+            context: session.context,
+            analysisVersion: session.analysis.version,
+            restoredFromBackup: session.restored === true,
+            metrics: session.analysis.metrics,
+            score: session.analysis.score,
+            improvements: session.analysis.improvements.slice(0, 3),
+            completedExercise: session.analysis.exercise,
+          })),
           focus: practicePlan(sessions, profile).reason,
         }),
       });

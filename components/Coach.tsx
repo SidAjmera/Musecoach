@@ -138,6 +138,7 @@ export default function Coach({
               title: s.title,
               context: s.context,
               analysisVersion: s.analysis.version,
+              restoredFromBackup: s.restored === true,
               metrics: s.analysis.metrics,
               score: s.analysis.score,
               formula: s.analysis.formula,

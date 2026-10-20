@@ -173,7 +173,6 @@ button {
   border-radius: 8px;
   color: var(--muted);
   font-size: 13px;
-  transition: background 0.2s;
 }
 .nav-link:hover {
   background: var(--bg);
@@ -352,9 +351,7 @@ main {
   font-weight: 600;
   line-height: 1.5;
   min-height: 42px;
-  transition:
-    background 0.2s,
-    transform 0.2s;
+  transition: transform 0.2s;
   white-space: normal;
 }
 .button:hover:not(:disabled) {
@@ -3270,4 +3267,34 @@ details p {
 }
 .exercise-main {
   scroll-margin-top: 95px;
+}
+.backup-import {
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+.backup-import > label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.backup-preview {
+  margin: 18px 0;
+  padding: 20px;
+  background: var(--soft-blue);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.backup-preview h4 {
+  font-size: 16px;
+  margin: 0 0 10px;
+}
+.backup-details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+}
+.backup-details[open] > summary {
+  margin-bottom: 20px;
 }

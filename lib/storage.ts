@@ -59,6 +59,44 @@ export async function saveSession(session: Session, audio?: Blob) {
     s.put({ ...session, audioSaved: !!audio, audio }),
   );
 }
+export async function restoreSessionHistory(
+  incoming: Session[],
+): Promise<{ added: number; skipped: number }> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("sessions", "readwrite");
+    const store = tx.objectStore("sessions");
+    const keys = store.getAllKeys();
+    let added = 0,
+      skipped = 0;
+    keys.onsuccess = () => {
+      const existing = new Set(keys.result);
+      for (const session of incoming) {
+        if (existing.has(session.id)) {
+          skipped++;
+          continue;
+        }
+        store.put({ ...session, audioSaved: false, restored: true });
+        existing.add(session.id);
+        added++;
+      }
+    };
+    tx.oncomplete = () => {
+      db.close();
+      resolve({ added, skipped });
+    };
+    const fail = () => {
+      db.close();
+      reject(
+        new Error(
+          "Could not restore this history. Check browser storage permissions or available space. Existing sessions were kept.",
+        ),
+      );
+    };
+    tx.onerror = fail;
+    tx.onabort = fail;
+  });
+}
 export async function listSessions(): Promise<Session[]> {
   const records = await transaction<(Session & { audio?: Blob })[]>(
     "readonly",

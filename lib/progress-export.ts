@@ -30,6 +30,7 @@ export function progressCSV(sessions: Session[]): string {
     "target_coverage_percent",
     "detected_low_note",
     "detected_high_note",
+    "restored_from_backup",
   ];
   const rows = [...sessions]
     .sort((a, b) => a.date.localeCompare(b.date))
@@ -56,6 +57,7 @@ export function progressCSV(sessions: Session[]): string {
         metric("targetCoverage"),
         analysis.range ? noteName(analysis.range[0]) : "",
         analysis.range ? noteName(analysis.range[1]) : "",
+        session.restored === true ? "yes" : "no",
       ]
         .map(csvCell)
         .join(",");

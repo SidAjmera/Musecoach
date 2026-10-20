@@ -32,6 +32,7 @@ import {
   readProfile,
   saveProfile,
   saveSession,
+  restoreSessionHistory,
 } from "@/lib/storage";
 import {
   exerciseInfo,
@@ -53,6 +54,8 @@ import ExerciseDesigner from "./ExerciseDesigner";
 import { readDesignedExercise } from "@/lib/designed-exercise";
 import { practicePlan } from "@/lib/practice-plan";
 import ProgressExport from "./ProgressExport";
+import HistoryBackup, { type RestoreResult } from "./HistoryBackup";
+import { type HistoryBackup as Backup } from "@/lib/history-backup";
 const navigation = [
   { path: "/", label: "Home", icon: House },
   { path: "/record", label: "Record & Review", icon: Mic },
@@ -509,6 +512,25 @@ export default function Musecoach() {
               profile={profile}
               onProfile={updateProfile}
               onClear={() => setConfirm("all")}
+              onRestore={async (backup, replaceProfile) => {
+                const result = await restoreSessionHistory(backup.sessions);
+                setSessions(await listSessions());
+                const restored: RestoreResult = {
+                  ...result,
+                  profileRestored: false,
+                };
+                if (replaceProfile) {
+                  try {
+                    saveProfile(backup.profile);
+                    setProfile(backup.profile);
+                    restored.profileRestored = true;
+                  } catch {
+                    restored.profileError =
+                      "History was restored, but the profile could not be saved. Check local storage permissions and retry the profile option.";
+                  }
+                }
+                return restored;
+              }}
             />
           ) : parts[0] === "session" ? (
             detail ? (
@@ -834,10 +856,15 @@ function Progress({
   profile,
   onClear,
   onProfile,
+  onRestore,
 }: {
   sessions: Session[];
   profile: Profile;
   onProfile: (p: Profile) => void;
+  onRestore: (
+    backup: Backup,
+    replaceProfile: boolean,
+  ) => Promise<RestoreResult>;
   onClear: () => void;
 }) {
   const [goal, setGoal] = useState("all");
@@ -913,6 +940,12 @@ function Progress({
           milestones, not automatically measured achievements.
         </p>
       </section>
+      <ProgressExport sessions={sessions} />
+      <HistoryBackup
+        profile={profile}
+        sessions={sessions}
+        onRestore={onRestore}
+      />
       <section className="panel">
         <div className="section-heading">
           <h3>Your session history</h3>
@@ -938,7 +971,6 @@ function Progress({
           </div>
         )}
       </section>
-      <ProgressExport sessions={sessions} />
       <div className="history-footer">
         <p className="small muted">
           History belongs to this browser and device. Clearing browser data may

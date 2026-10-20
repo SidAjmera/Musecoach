@@ -263,6 +263,8 @@ export default function Review({
         </div>
       </div>
       <div className="notice small">
+        {session.restored &&
+          "Restored from your backup. Measurements were retained as saved; audio was not included. "}
         {a.exercise?.source === "ai" &&
           "AI-designed targets · scored by the local detector. "}
         {session.context === "free"

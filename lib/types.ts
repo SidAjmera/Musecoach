@@ -114,6 +114,7 @@ export interface Session {
   context: "free" | ExerciseKind;
   analysis: Analysis;
   audioSaved: boolean;
+  restored?: boolean;
 }
 export const defaultProfile: Profile = {
   name: "",
