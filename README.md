@@ -49,6 +49,10 @@ Set `PLAYWRIGHT_BASE_URL=https://musecoach.vercel.app` when running browser chec
 - Local profile and conversations in localStorage. Structured sessions and explicitly opted-in audio Blobs in IndexedDB. Reload, history filters, individual audio/session deletion, and clearing all data work. No invented progress or achievements. Goals are marked complete by the user.
 - Comparisons and metric trends only for identical exercise references and analysis versions. Free-singing attempts with potentially different songs are not directly ranked.
 
+## Version 2 additions
+
+- **Targeted practice focus:** Practice suggests exercises using the lowest supported median skill indicator from up to five recent takes with the current detector. It shows evidence links and latest measured pointers, respects range limits, and offers a baseline or input recovery when evidence is insufficient. It requires no API key. This is guidance across recent practice; it does not rank different exercises as progress.
+
 ## Version 2 roadmap
 
 These are planned features, not currently available:

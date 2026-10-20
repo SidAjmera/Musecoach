@@ -48,6 +48,7 @@ import Coach from "./Coach";
 import ProgressTrend from "./ProgressTrend";
 import PitchTuner from "./PitchTuner";
 import ExerciseLibrary from "./ExerciseLibrary";
+import PracticePlan from "./PracticePlan";
 const navigation = [
   { path: "/", label: "Home", icon: House },
   { path: "/record", label: "Record & Review", icon: Mic },
@@ -488,6 +489,7 @@ export default function Musecoach() {
           ) : parts[0] === "practice" ? (
             <Practice
               profile={profile}
+              sessions={sessions}
               kind={kind}
               onStart={(k, b) => router.push(`/record/${k}/${b}`)}
               onRange={() => router.push("/record/range")}
@@ -652,12 +654,14 @@ function RecordingRoute({
 }
 function Practice({
   profile,
+  sessions,
   kind,
   onStart,
   onRange,
   onSelect,
 }: {
   profile: Profile;
+  sessions: Session[];
   kind: ExerciseKind;
   onStart: (k: ExerciseKind, b: number) => void;
   onRange: () => void;
@@ -681,6 +685,15 @@ function Practice({
   }, [selected, profile.low, profile.high]);
   return (
     <>
+      <PracticePlan
+        sessions={sessions}
+        profile={profile}
+        onChoose={(kind) => {
+          setSelected(kind);
+          onSelect(kind);
+          setError("");
+        }}
+      />
       <ExerciseLibrary
         selected={selected}
         profile={profile}

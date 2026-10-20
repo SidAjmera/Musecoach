@@ -3212,3 +3212,23 @@ details p {
     gap: 10px;
   }
 }
+.practice-plan {
+  margin-bottom: 24px;
+}
+.practice-plan .chips {
+  margin: 18px 0;
+}
+.practice-plan details {
+  margin: 14px 0;
+  font-size: 13px;
+}
+.practice-plan summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.practice-plan ul {
+  padding-left: 20px;
+}
+.practice-plan li {
+  margin: 8px 0;
+}
