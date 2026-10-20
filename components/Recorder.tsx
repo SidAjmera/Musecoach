@@ -41,7 +41,7 @@ export default function Recorder({
       rangeExploration
         ? "Range exploration"
         : exercise
-          ? exerciseInfo[exercise.kind].label
+          ? exercise.name || exerciseInfo[exercise.kind].label
           : "Free singing",
     );
   const recorder = useRef<BrowserRecorder | null>(null),
@@ -405,7 +405,12 @@ export default function Recorder({
         {exercise && (
           <section className="panel">
             <span className="eyebrow">YOUR REFERENCE</span>
-            <h3>{exerciseInfo[exercise.kind].label}</h3>
+            <h3>{exercise.name || exerciseInfo[exercise.kind].label}</h3>
+            {exercise.source === "ai" && (
+              <p className="small muted">
+                AI-designed exercise · measured locally. {exercise.rationale}
+              </p>
+            )}
             <div className="target-notes">
               {exercise.targets.map((t, i) => (
                 <span className={activeTarget === t ? "active" : ""} key={i}>

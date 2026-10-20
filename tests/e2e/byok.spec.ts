@@ -100,6 +100,12 @@ test("BYOK saves only by opt-in, survives navigation and forgets keys", async ({
     await page.evaluate(() => localStorage.getItem("musecoach-ai-connection")),
   ).toBeNull();
   await saveConnection(page, true);
+  await page.evaluate(() =>
+    localStorage.setItem(
+      "musecoach-designed-exercise",
+      JSON.stringify({ name: "Disposable design fixture" }),
+    ),
+  );
   await page.getByRole("link", { name: "Progress", exact: true }).click();
   await page
     .getByRole("button", { name: "Delete all local data", exact: true })
@@ -114,6 +120,11 @@ test("BYOK saves only by opt-in, survives navigation and forgets keys", async ({
   ).toBeVisible();
   expect(
     await page.evaluate(() => localStorage.getItem("musecoach-ai-connection")),
+  ).toBeNull();
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("musecoach-designed-exercise"),
+    ),
   ).toBeNull();
   expect(posts).toHaveLength(1);
 });

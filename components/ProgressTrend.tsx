@@ -61,8 +61,9 @@ export default function ProgressTrend({ sessions }: { sessions: Session[] }) {
                     sessions.find((s) => groupKey(s) === g)!;
                   return (
                     <option key={g} value={g}>
-                      {exerciseInfo[s.context as ExerciseKind].label} ·{" "}
-                      {noteName(s.analysis.exercise!.base)} ·{" "}
+                      {s.analysis.exercise?.name ||
+                        exerciseInfo[s.context as ExerciseKind].label}{" "}
+                      · {noteName(s.analysis.exercise!.base)} ·{" "}
                       {s.analysis.version}
                     </option>
                   );

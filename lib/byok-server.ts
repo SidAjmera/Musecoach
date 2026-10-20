@@ -34,6 +34,22 @@ export async function answerBYOK(
   if (!body || typeof body !== "object" || Array.isArray(body))
     return fail("Please send a valid question.");
   const { ai, ...context } = body as Record<string, unknown>;
+  const resolution = visitorEnvironment(ai, env);
+  if (resolution.error) return fail(resolution.error);
+  const result = await answerCoach(context, resolution.env!, fetcher);
+  if (result.body.error)
+    result.body.error = result.body.error.replace(
+      "Check AI_PROVIDER, AI_API_KEY, and AI_MODEL in .env.local.",
+      "Check the provider, API key, and model in AI connection settings.",
+    );
+  return result;
+}
+
+export function visitorEnvironment(
+  ai: unknown,
+  env: Environment = process.env,
+): { env?: Environment; error?: string } {
+  const fail = (error: string) => ({ error });
   if (!ai || typeof ai !== "object" || Array.isArray(ai))
     return fail("Add your own API key in AI connection settings to chat.");
   const settings = ai as Record<string, unknown>;
@@ -77,11 +93,5 @@ export async function answerBYOK(
     return fail(
       "Check your provider and model in AI connection settings. A model ID is required for a compatible provider.",
     );
-  const result = await answerCoach(context, config, fetcher);
-  if (result.body.error)
-    result.body.error = result.body.error.replace(
-      "Check AI_PROVIDER, AI_API_KEY, and AI_MODEL in .env.local.",
-      "Check the provider, API key, and model in AI connection settings.",
-    );
-  return result;
+  return { env: config };
 }

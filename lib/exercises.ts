@@ -290,6 +290,14 @@ export const isSequenceExercise = (kind: ExerciseKind) =>
   !["match", "hold"].includes(kind);
 export const midiHz = (m: number) => 440 * 2 ** ((m - 69) / 12);
 export const hzMidi = (hz: number) => 69 + 12 * Math.log2(hz / 440);
+export function provisionalPracticeWindow(
+  range: [number, number],
+): [number, number] | undefined {
+  if (!range.every(Number.isFinite)) return undefined;
+  const low = Math.max(36, Math.ceil(range[0]));
+  const high = Math.min(88, Math.floor(range[1]));
+  return high - low >= 1 ? [low, high] : undefined;
+}
 export function noteName(m: number) {
   const n = Math.round(m);
   return (

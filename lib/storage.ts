@@ -97,4 +97,5 @@ export async function clearData() {
   await transaction("readwrite", (s) => s.clear());
   localStorage.removeItem("musecoach-profile");
   localStorage.removeItem("musecoach-chat");
+  localStorage.removeItem("musecoach-designed-exercise");
 }

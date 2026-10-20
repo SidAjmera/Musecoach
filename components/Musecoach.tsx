@@ -49,6 +49,9 @@ import ProgressTrend from "./ProgressTrend";
 import PitchTuner from "./PitchTuner";
 import ExerciseLibrary from "./ExerciseLibrary";
 import PracticePlan from "./PracticePlan";
+import ExerciseDesigner from "./ExerciseDesigner";
+import { readDesignedExercise } from "@/lib/designed-exercise";
+import { practicePlan } from "@/lib/practice-plan";
 const navigation = [
   { path: "/", label: "Home", icon: House },
   { path: "/record", label: "Record & Review", icon: Mic },
@@ -117,9 +120,7 @@ export default function Musecoach() {
         : undefined,
     kind = parts[1] as ExerciseKind,
     base = Number(parts[2]),
-    recommended =
-      sessions[0]?.analysis.recommendation ||
-      (profile.goals.includes("Pitch stability") ? "hold" : "match");
+    recommended = practicePlan(sessions, profile).exercises[0] || "hold";
   function practice(k: ExerciseKind) {
     router.push(`/practice/${k}`);
   }
@@ -494,6 +495,7 @@ export default function Musecoach() {
               onStart={(k, b) => router.push(`/record/${k}/${b}`)}
               onRange={() => router.push("/record/range")}
               onSelect={practice}
+              onDesigned={() => router.push("/record/designed")}
             />
           ) : parts[0] === "progress" ? (
             <Progress
@@ -632,9 +634,12 @@ function RecordingRoute({
 }) {
   try {
     const valid = exerciseKinds.includes(kind);
-    const exercise = valid
-      ? makeExercise(kind, Number.isFinite(base) ? base : 60, profile)
-      : undefined;
+    const exercise =
+      (kind as string) === "designed"
+        ? readDesignedExercise(profile)
+        : valid
+          ? makeExercise(kind, Number.isFinite(base) ? base : 60, profile)
+          : undefined;
     return (
       <Recorder
         exercise={exercise}
@@ -659,6 +664,7 @@ function Practice({
   onStart,
   onRange,
   onSelect,
+  onDesigned,
 }: {
   profile: Profile;
   sessions: Session[];
@@ -666,6 +672,7 @@ function Practice({
   onStart: (k: ExerciseKind, b: number) => void;
   onRange: () => void;
   onSelect: (k: ExerciseKind) => void;
+  onDesigned: () => void;
 }) {
   const routeSelection = exerciseKinds.includes(kind) ? kind : "hold";
   const [selected, setSelected] = useState<ExerciseKind>(routeSelection),
@@ -693,6 +700,11 @@ function Practice({
           onSelect(kind);
           setError("");
         }}
+      />
+      <ExerciseDesigner
+        sessions={sessions}
+        profile={profile}
+        onUse={onDesigned}
       />
       <ExerciseLibrary
         selected={selected}

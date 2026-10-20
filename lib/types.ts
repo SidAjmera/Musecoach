@@ -74,6 +74,9 @@ export interface Exercise {
   base: number;
   targets: Target[];
   duration: number;
+  name?: string;
+  source?: "ai";
+  rationale?: string;
 }
 export interface Metric {
   key: string;

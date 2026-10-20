@@ -2,7 +2,7 @@
 
 **Live website:** [musecoach.vercel.app](https://musecoach.vercel.app/) — open this link on desktop or mobile.
 
-A singing practice website for desktop and mobile, built with Next.js, TypeScript, React, Tailwind CSS, Web Audio, MediaRecorder, and IndexedDB. Open the hosted HTTPS link on any supported device; visitors do not need to run a server. Recording, measurements, exercises, and history work without an AI key. Recordings and history stay in each visitor’s browser; optional AI conversations use their own provider key.
+A singing practice website for desktop and mobile, built with Next.js, TypeScript, React, Tailwind CSS, Web Audio, MediaRecorder, and IndexedDB. Open the hosted HTTPS link on any supported device; visitors do not need to run a server. Recording, measurements, exercises, and history work without an AI key. Recordings and history stay in each visitor’s browser; optional AI conversations and exercise design use their own provider key.
 
 ## Free online hosting
 
@@ -53,13 +53,14 @@ Set `PLAYWRIGHT_BASE_URL=https://musecoach.vercel.app` when running browser chec
 
 - **Targeted practice focus:** Practice suggests exercises using the lowest supported median skill indicator from up to five recent takes with the current detector. It shows evidence links and latest measured pointers, respects range limits, and offers a baseline or input recovery when evidence is insufficient. It requires no API key. This is guidance across recent practice; it does not rank different exercises as progress.
 
+- **AI exercise design:** In Practice, choose Design my exercise. The selected coach uses measured summaries, explicit goals, comfortable range and improvement pointers through the visitor's existing AI connection. With no key, the app offers Add API key or Continue without AI. Declining clearly explains that AI design is unavailable and retains the measured practice focus above. There are no automatic provider calls when adding a key.
+- Generated exercises contain 2–10 defined, separated notes inside the current range, at least five seconds of target singing, and an 18-second total including count-in. The server and browser reject invalid targets before use. Choose Use this exercise to retain the latest draft in this browser and open the recorder. Range changes trigger validation again. Synthesised reference playback, uploads, worker scoring, saved reviews, and comparisons use the actual generated reference; AI text never becomes a measured score.
+
 ## Version 2 roadmap
 
 These are planned features, not currently available:
 
 - Expand the practice library from 30 to 100 exercises, with defined references and tested scoring for each exercise.
-- Personalised AI exercise design: the selected coach uses the singer's measured skills, goals, comfortable range, and coaching pointers to design targeted exercises using their own API connection. Validate generated targets and timings before offering playback or scoring.
-- When someone opens AI exercise design without a connected API key, offer to add their key. If they decline, explain that AI exercise design is currently unavailable and recommend existing exercise categories using their current measurements and improvement pointers. Prioritise their weakest supported skills, respect their comfortable range, and explain the recommendation; do not choose random exercises. With insufficient history, offer an appropriate baseline assessment rather than inventing a weakness.
 
 ## Analysis and score definitions
 
@@ -75,15 +76,15 @@ Scores are deterministic for the same decoded samples and context, independent o
 
 ## Bring your own API key
 
-Each visitor opens **My Coach → Bring your own API key**, selects Gemini, OpenAI, Anthropic, or Grok, enters their own API key, and clicks **Save AI connection**. A model ID can override the provider default. Saving is local and makes no provider request; credentials and model access are checked only when the user explicitly sends a message. The user's provider account handles API usage and billing; free-tier limits and model access depend on that account. Chat subscriptions do not necessarily include API credits.
+Each visitor opens **My Coach → Bring your own API key**, or **Practice → Design my exercise → Add API key**, selects Gemini, OpenAI, Anthropic, or Grok, enters their own API key, and clicks **Save AI connection**. A model ID can override the provider default. Saving is local and makes no provider request; credentials and model access are checked only when the user explicitly sends a message or designs an exercise. The user's provider account handles API usage and billing; free-tier limits and model access depend on that account. Chat subscriptions do not necessarily include API credits.
 
-No deployment API key is required. The public chat route requires a visitor credential on every request and **never falls back to an operator key**, even if an old AI_API_KEY or OPENAI_API_KEY is present in the hosting environment. Do not add your own key to public client environment variables. Existing server-key setup has been replaced by this per-user flow; private .env.local files are not edited automatically.
+No deployment API key is required. The public AI routes require a visitor credential on every request and **never falls back to an operator key**, even if an old AI_API_KEY or OPENAI_API_KEY is present in the hosting environment. Do not add your own key to public client environment variables. Existing server-key setup has been replaced by this per-user flow; private .env.local files are not edited automatically.
 
 Keys stay in tab memory by default: navigating within the app preserves the connection, while a full reload or closing the tab removes it. **Remember my key on this device** is off by default. Opting in stores the connection, including its key, unencrypted in localStorage for this site's browser profile. It is not an encrypted vault: same-origin scripts, browser extensions with access, and people using that browser profile may be able to read it. Do not enable it on shared devices. Profiles, recording records, and conversation history never contain the connection key. **Forget API key** disconnects it, cancels an in-flight request, and removes the remembered connection; **Delete all local data** also forgets it. Forgetting does not revoke a provider key or undo an already submitted provider request. Revocation must be done in the provider account.
 
 Requests flow from the browser over HTTPS to this app's Next.js server route, then to the selected provider. The app does not persist keys on the server, log request bodies, or put keys in URLs, prompts, or responses. The hosting operator and infrastructure can technically access incoming request bodies: this is a relay, not end-to-end secrecy from the host. Configure your hosting, reverse proxy, error monitoring, and request tracing to redact or omit chat request bodies and authentication headers. Responses use no-store caching. Provider SDK code and endpoint adapters stay on the server.
 
-Only **Send message** shares the key for authentication, the typed question, explicit profile preferences, up to five measured session summaries, and up to twelve conversation messages. **Audio is never sent.** Provider retention and data-use policies apply to submitted text. Responses may be mistaken; measured scores remain independent of AI text. There is a 30-second provider timeout, validated JSON replies, and recovery messages for rejected credentials, quota limits, and provider failures. No live provider calls were used for verification.
+**Send message** shares the key for authentication, the typed question, explicit profile preferences, up to five measured session summaries, and up to twelve conversation messages. **Design my exercise**, with an AI connection present, shares the key, selected coach, experience, goals, comfortable range, suggested focus, and up to five measured session summaries with improvement pointers; it does not send chat history or session titles. Saving a key does not make a provider request. **Audio is never sent.** Provider retention and data-use policies apply to submitted text. Responses may be mistaken; measured scores remain independent of AI text. There is a 30-second provider timeout, validated JSON replies, and recovery messages for rejected credentials, quota limits, and provider failures. No live provider calls were used for verification.
 
 ### Other providers
 
@@ -94,7 +95,7 @@ AI_PROVIDER=openai-compatible
 AI_BASE_URL=https://your-provider.example/v1
 ```
 
-Visitors then see **Compatible provider** in the selector and supply their own key and model ID. The server appends /chat/completions and requires JSON-object mode. Set AI_PROVIDER=custom for the existing custom-adapter protocol: AI_BASE_URL is the full adapter endpoint, receives {system, personality, profile, sessions, messages, message} with a Bearer credential, and returns {"reply":"..."} of 1–1800 characters. Visitors cannot supply arbitrary URLs. Only the operator can configure this additional destination; choose an endpoint trusted to receive visitors' credentials and text. Built-in providers always use fixed official endpoints, independent of this setting. Redirects are rejected. HTTPS is required for remote endpoints; localhost HTTP exists for local development only. Unrelated API protocols or cloud IAM authentication require a separate adapter.
+Visitors then see **Compatible provider** in the selector and supply their own key and model ID. The server appends /chat/completions and requires JSON-object mode. Set AI_PROVIDER=custom for the existing custom-adapter protocol: AI_BASE_URL is the full adapter endpoint, receives {system, personality, profile, sessions, messages, message} with a Bearer credential, and returns {"reply":"..."} of 1–1800 characters for conversation. For exercise design it must return {"name":"...","rationale":"...","targets":[{"midi":60,"start":3,"duration":2},...]} matching the design instructions; both modes receive a system prompt stating the required shape. Visitors cannot supply arbitrary URLs. Only the operator can configure this additional destination; choose an endpoint trusted to receive visitors' credentials and text. Built-in providers always use fixed official endpoints, independent of this setting. Redirects are rejected. HTTPS is required for remote endpoints; localhost HTTP exists for local development only. Unrelated API protocols or cloud IAM authentication require a separate adapter.
 
 ### Hosting
 

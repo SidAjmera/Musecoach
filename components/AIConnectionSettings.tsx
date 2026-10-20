@@ -33,9 +33,9 @@ export default function AIConnectionSettings({
         {connection ? "Manage your AI connection" : "Bring your own API key"}
       </summary>
       <p className="small muted">
-        Use your own provider account for optional AI conversations. Your
-        provider’s prices and limits apply. Recording, measured reviews, and
-        exercises work without a key.
+        Use your own provider account for optional AI conversations and exercise
+        design. Your provider’s prices and limits apply. Recording, measured
+        reviews, and library exercises work without a key.
       </p>
       <form
         onSubmit={(event) => {
@@ -58,7 +58,7 @@ export default function AIConnectionSettings({
             });
             setKey("");
             setStatus(
-              "Connection saved. Your key and model will be checked when you send a message.",
+              "Connection saved. Your key and model will be checked when you send a message or design an exercise.",
             );
           } catch {
             setError(
@@ -135,9 +135,10 @@ export default function AIConnectionSettings({
             browser profile. Use only on a device you trust.
           </p>
           <p className="small muted">
-            When you send a message, your key passes through this site’s server
-            to your selected provider. The app does not save it on the server.
-            Only chat text and measured summaries are sent; audio stays on your
+            When you send a message or design an exercise, your key passes
+            through this site’s server to your selected provider. The app does
+            not save it on the server. Only the requested text context,
+            preferences and measured summaries are sent; audio stays on your
             device.
           </p>
           <button className="button secondary" type="submit">

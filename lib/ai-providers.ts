@@ -133,12 +133,13 @@ function textParts(parts: unknown, type: string) {
     .join("");
 }
 
-export async function requestCoach(
+export async function requestStructured(
   config: AIConfig,
   system: string,
   context: unknown,
+  schema: Record<string, unknown>,
   fetcher: typeof fetch = fetch,
-): Promise<string> {
+): Promise<unknown> {
   const { provider, key, model } = config,
     input = JSON.stringify(context);
   let url: string, body: unknown;
@@ -154,7 +155,7 @@ export async function requestCoach(
       generationConfig: {
         maxOutputTokens: 4096,
         responseFormat: {
-          text: { mimeType: "APPLICATION_JSON", schema: REPLY_SCHEMA },
+          text: { mimeType: "APPLICATION_JSON", schema },
         },
       },
     };
@@ -167,7 +168,7 @@ export async function requestCoach(
       max_tokens: 1024,
       system,
       messages: [{ role: "user", content: input }],
-      output_config: { format: { type: "json_schema", schema: REPLY_SCHEMA } },
+      output_config: { format: { type: "json_schema", schema } },
     };
   } else if (provider === "openai") {
     url = "https://api.openai.com/v1/responses";
@@ -183,7 +184,7 @@ export async function requestCoach(
           type: "json_schema",
           name: "coach_reply",
           strict: true,
-          schema: REPLY_SCHEMA,
+          schema,
         },
       },
     };
@@ -207,7 +208,7 @@ export async function requestCoach(
               json_schema: {
                 name: "coach_reply",
                 strict: true,
-                schema: REPLY_SCHEMA,
+                schema,
               },
             }
           : { type: "json_object" },
@@ -247,7 +248,7 @@ export async function requestCoach(
       )
     )
       throw new ProviderError("invalid");
-    return jsonReply(
+    return jsonValue(
       messages.map((m) => textParts(m.content, "output_text")).join(""),
     );
   }
@@ -261,20 +262,41 @@ export async function requestCoach(
     const parts = array(object(candidate.content).parts)
       .map(object)
       .filter((p) => p.thought !== true);
-    return jsonReply(
+    return jsonValue(
       parts.map((p) => (typeof p.text === "string" ? p.text : "")).join(""),
     );
   }
   if (provider === "anthropic") {
     if (data.stop_reason !== "end_turn") throw new ProviderError("invalid");
-    return jsonReply(textParts(data.content, "text"));
+    return jsonValue(textParts(data.content, "text"));
   }
   if (provider === "grok" || provider === "openai-compatible") {
     const choice = object(array(data.choices)[0]),
       message = object(choice.message);
     if (choice.finish_reason !== "stop" || message.refusal)
       throw new ProviderError("invalid");
-    return jsonReply(message.content);
+    return jsonValue(message.content);
   }
-  return jsonReply(JSON.stringify(data));
+  return jsonValue(JSON.stringify(data));
+}
+
+function jsonValue(text: unknown): unknown {
+  if (typeof text !== "string") throw new ProviderError("invalid");
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new ProviderError("invalid");
+  }
+}
+export async function requestCoach(
+  config: AIConfig,
+  system: string,
+  context: unknown,
+  fetcher: typeof fetch = fetch,
+): Promise<string> {
+  return jsonReply(
+    JSON.stringify(
+      await requestStructured(config, system, context, REPLY_SCHEMA, fetcher),
+    ),
+  );
 }

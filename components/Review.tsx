@@ -8,7 +8,11 @@ import {
   Trash2,
 } from "lucide-react";
 import { Analysis, Profile, Session } from "@/lib/types";
-import { noteName, exerciseInfo } from "@/lib/exercises";
+import {
+  noteName,
+  exerciseInfo,
+  provisionalPracticeWindow,
+} from "@/lib/exercises";
 import { getAudio } from "@/lib/storage";
 import { previousAttempt } from "@/lib/comparison";
 import { measuredIntro } from "@/lib/coaches";
@@ -151,6 +155,7 @@ export default function Review({
   onReanalyze?: (session: Session, audio: Blob) => Promise<void>;
 }) {
   const a = session.analysis,
+    provisional = a.range ? provisionalPracticeWindow(a.range) : undefined,
     previous = previousAttempt(session, sessions),
     [url, setUrl] = useState(""),
     [audioError, setAudioError] = useState(""),
@@ -258,6 +263,8 @@ export default function Review({
         </div>
       </div>
       <div className="notice small">
+        {a.exercise?.source === "ai" &&
+          "AI-designed targets · scored by the local detector. "}
         {session.context === "free"
           ? "Free-singing practice indicator · not an objective rating of talent."
           : "Guided exercise score · compared with a defined reference."}{" "}
@@ -512,13 +519,20 @@ export default function Review({
           </p>
           <button
             className="button secondary"
-            disabled={Math.floor(a.range[1]) - Math.ceil(a.range[0]) < 1}
-            onClick={() =>
-              onRange(Math.ceil(a.range![0]), Math.floor(a.range![1]))
-            }
+            disabled={!provisional}
+            onClick={() => {
+              if (provisional) onRange(...provisional);
+            }}
           >
             Use as my provisional practice range
           </button>
+          {!provisional && (
+            <p className="small muted">
+              A provisional window needs at least two distinct notes inside the
+              supported practice window, C2–E6. You can set comfortable notes in
+              your profile.
+            </p>
+          )}
         </section>
       )}
       {onDelete && (
