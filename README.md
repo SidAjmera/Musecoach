@@ -51,6 +51,8 @@ Set `PLAYWRIGHT_BASE_URL=https://musecoach.vercel.app` when running browser chec
 
 ## Version 2 additions
 
+- **Exercise favourites:** Use the star beside any library exercise, then Show favourites only to find it again. Home offers shortcuts to the first four saved choices. Favourites remain subject to the current comfortable range, persist across reloads, and travel with profile backups. Older profiles and backup files remain compatible. Delete all local data clears them too.
+
 - **Private backup and restore:** Progress → Back up or restore history downloads a file containing your profile, structured reviews, pitch graphs and exercise references. On another browser or device, choose the file, review the preview, optionally select its profile, then choose Restore this backup. Matching session IDs are skipped, preserving existing sessions and their saved audio. Up to 64 MB and 1,000 sessions are supported; malformed files are rejected before writes. Backups exclude audio, conversations and API connections. Download audio separately from saved reviews. Restored measurements are labelled as retained data and are not independently reanalysed; their origin is included in optional coach context and CSV exports. Backup files contain your profile and reviews as plain JSON.
 
 - **100 defined exercises:** The original 30 are retained and expanded with 70 fixed musical references across Basics, Scales, Intervals, Arpeggios, Phrases, and Timing. Search and category filters keep the library manageable. Every reference stays within the chosen range, and selecting one brings its controls into view with keyboard focus. The Base note control anchors the pattern; descending references may begin above that base.

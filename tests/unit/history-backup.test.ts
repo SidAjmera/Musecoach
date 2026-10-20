@@ -26,6 +26,25 @@ it("round-trips supported measurements and profile without claiming to retain au
   expect(restored.sessions[0].audioSaved).toBe(false);
   expect(restored.audioIncluded).toBe(false);
 });
+it("carries favourites while keeping older profile backups compatible", () => {
+  const profile = {
+    ...defaultProfile,
+    favoriteExercises: ["hold", "scale"] as const,
+  };
+  const restored = parseHistoryBackup(
+    historyBackupJSON(
+      { ...profile, favoriteExercises: [...profile.favoriteExercises] },
+      [free],
+    ),
+  );
+  expect(restored.profile.favoriteExercises).toEqual(["hold", "scale"]);
+  const legacy = backup();
+  delete legacy.profile.favoriteExercises;
+  expect(validateHistoryBackup(legacy).profile.favoriteExercises).toEqual([]);
+  const invalid = backup();
+  invalid.profile.favoriteExercises = ["unknown-exercise"];
+  expect(() => validateHistoryBackup(invalid)).toThrow();
+});
 it("strips credentials, conversations, blobs and arbitrary storage fields on export and import", () => {
   const profile = {
     ...defaultProfile,

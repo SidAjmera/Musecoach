@@ -82,6 +82,14 @@ function profile(value: unknown): Profile {
     experience: oneOf(p.experience, ["beginner", "intermediate", "advanced"]),
     goals: list(p.goals, 20, (v) => text(v, 120)),
     completedGoals: list(p.completedGoals, 20, (v) => text(v, 120)),
+    favoriteExercises:
+      p.favoriteExercises === undefined
+        ? []
+        : [
+            ...new Set(
+              list(p.favoriteExercises, 100, (v) => oneOf(v, exerciseKinds)),
+            ),
+          ],
     genres: list(p.genres, 20, (v) => text(v, 120)),
     coach: oneOf(
       p.coach,

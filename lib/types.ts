@@ -46,6 +46,7 @@ export interface Profile {
   experience: string;
   goals: string[];
   completedGoals: string[];
+  favoriteExercises: ExerciseKind[];
   genres: string[];
   coach: CoachId;
   version: "female" | "male" | "custom";
@@ -121,6 +122,7 @@ export const defaultProfile: Profile = {
   experience: "beginner",
   goals: ["Pitch stability", "Confidence"],
   completedGoals: [],
+  favoriteExercises: [],
   genres: [],
   coach: "Sunny",
   version: "female",

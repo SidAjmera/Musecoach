@@ -1,5 +1,6 @@
 import { Profile, Session, defaultProfile } from "./types";
 import { forgetAIConnection } from "./ai-settings";
+import { exerciseKinds } from "./exercises";
 const DB = "musecoach-v1";
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -46,7 +47,16 @@ export function readProfile(): Profile | null {
   try {
     const p = JSON.parse(raw);
     if (typeof p.name !== "string" || !Array.isArray(p.goals)) return null;
-    return { ...defaultProfile, ...p };
+    const favorites = Array.isArray(p.favoriteExercises)
+      ? p.favoriteExercises.filter((kind: unknown) =>
+          exerciseKinds.includes(kind as (typeof exerciseKinds)[number]),
+        )
+      : [];
+    return {
+      ...defaultProfile,
+      ...p,
+      favoriteExercises: [...new Set(favorites)],
+    };
   } catch {
     return null;
   }

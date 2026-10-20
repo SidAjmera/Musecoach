@@ -429,6 +429,41 @@ export default function Musecoach() {
                   )}
                 </div>
               </section>
+              {profile.favoriteExercises.length > 0 && (
+                <section
+                  className="panel home-favorites"
+                  aria-label="Favourite exercises"
+                >
+                  <div className="section-heading">
+                    <h3>Your favourites</h3>
+                    <Link href="/practice" className="text-button">
+                      View library <ArrowRight size={15} />
+                    </Link>
+                  </div>
+                  <div className="chips">
+                    {profile.favoriteExercises.slice(0, 4).map((kind) => {
+                      const unavailable =
+                        exerciseSpan(kind) > profile.high - profile.low;
+                      return (
+                        <button
+                          key={kind}
+                          className="chip"
+                          aria-label={`Open favourite: ${exerciseInfo[kind].label}`}
+                          disabled={unavailable}
+                          onClick={() => practice(kind)}
+                        >
+                          {exerciseInfo[kind].label}
+                          {unavailable ? " · outside current range" : ""}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="small muted">
+                    Saved from your practice library. Your current comfortable
+                    range still applies.
+                  </p>
+                </section>
+              )}
               <div className="home-bottom">
                 <section className="panel recent-panel">
                   <div className="section-heading">
@@ -505,6 +540,17 @@ export default function Musecoach() {
               onRange={() => router.push("/record/range")}
               onSelect={practice}
               onDesigned={() => router.push("/record/designed")}
+              onFavorites={(favoriteExercises) => {
+                try {
+                  const next = { ...profile, favoriteExercises };
+                  saveProfile(next);
+                  setProfile(next);
+                } catch {
+                  setError(
+                    "Could not save your favourite exercises. Check browser storage permissions.",
+                  );
+                }
+              }}
             />
           ) : parts[0] === "progress" ? (
             <Progress
@@ -693,6 +739,7 @@ function Practice({
   onRange,
   onSelect,
   onDesigned,
+  onFavorites,
 }: {
   profile: Profile;
   sessions: Session[];
@@ -701,6 +748,7 @@ function Practice({
   onRange: () => void;
   onSelect: (k: ExerciseKind) => void;
   onDesigned: () => void;
+  onFavorites: (kinds: ExerciseKind[]) => void;
 }) {
   const routeSelection = exerciseKinds.includes(kind) ? kind : "hold";
   const [selected, setSelected] = useState<ExerciseKind>(routeSelection),
@@ -750,6 +798,7 @@ function Practice({
         selected={selected}
         profile={profile}
         onSelect={choose}
+        onFavorites={onFavorites}
       />
       <div className="practice-studio">
         <section className={`panel exercise-main practice-${selected}`}>
