@@ -18,6 +18,7 @@ import {
 import { validateUpload, microphoneError } from "@/lib/validation";
 import { Exercise, Session } from "@/lib/types";
 import { noteName, exerciseInfo } from "@/lib/exercises";
+import PitchTuner from "./PitchTuner";
 export default function Recorder({
   exercise,
   rangeExploration = false,
@@ -400,6 +401,7 @@ export default function Recorder({
         </label>
       </section>
       <aside className="record-sidebar">
+        <PitchTuner disabled={busy} />
         {exercise && (
           <section className="panel">
             <span className="eyebrow">YOUR REFERENCE</span>
@@ -409,7 +411,8 @@ export default function Recorder({
                 <span className={activeTarget === t ? "active" : ""} key={i}>
                   {noteName(t.midi)}
                   <small>
-                    {t.start}–{t.start + t.duration}s
+                    {Number(t.start.toFixed(1))}–
+                    {Number((t.start + t.duration).toFixed(1))}s
                   </small>
                 </span>
               ))}

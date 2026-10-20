@@ -4,6 +4,10 @@ test("coach gallery defaults, customization and saved appearance", async ({
   page,
 }) => {
   await page.goto("/");
+  await expect(page.getByRole("dialog")).not.toBeVisible();
+  await page
+    .getByRole("button", { name: "Edit your profile", exact: true })
+    .click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(dialog.getByText(/Every coach can be customized/)).toBeVisible();

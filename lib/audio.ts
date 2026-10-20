@@ -1,6 +1,20 @@
 import { Analysis, Exercise } from "./types";
 import { validateDuration } from "./validation";
 import { midiHz } from "./exercises";
+export function strongestChannel(channels: Float32Array[]): Float32Array {
+  // Selecting a channel avoids stereo phase cancellation during mono downmixing.
+  let best = channels[0],
+    bestEnergy = -1;
+  for (const channel of channels) {
+    let energy = 0;
+    for (const sample of channel) energy += sample * sample;
+    if (energy > bestEnergy) {
+      best = channel;
+      bestEnergy = energy;
+    }
+  }
+  return best;
+}
 export class BrowserRecorder {
   private stream?: MediaStream;
   private recorder?: MediaRecorder;
@@ -42,7 +56,17 @@ export class BrowserRecorder {
         analyser.getFloatTimeDomainData(bins);
         let power = 0;
         for (const x of bins) power += x * x;
-        onLevel(Math.min(1, Math.sqrt(power / bins.length) * 5));
+        onLevel(
+          Math.max(
+            0,
+            Math.min(
+              1,
+              (20 * Math.log10(Math.max(Math.sqrt(power / bins.length), 1e-6)) +
+                65) /
+                60,
+            ),
+          ),
+        );
         this.raf = requestAnimationFrame(meter);
       };
       meter();
@@ -106,7 +130,17 @@ export async function decodeAudio(
         rate,
       );
     const source = offline.createBufferSource();
-    source.buffer = audio;
+    const mono = offline.createBuffer(1, audio.length, audio.sampleRate);
+    mono
+      .getChannelData(0)
+      .set(
+        strongestChannel(
+          Array.from({ length: audio.numberOfChannels }, (_, i) =>
+            audio.getChannelData(i),
+          ),
+        ),
+      );
+    source.buffer = mono;
     source.connect(offline.destination);
     source.start();
     const rendered = await offline.startRendering();

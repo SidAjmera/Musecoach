@@ -12,6 +12,7 @@ import { noteName, exerciseInfo } from "@/lib/exercises";
 import { getAudio } from "@/lib/storage";
 import { previousAttempt } from "@/lib/comparison";
 import { measuredIntro } from "@/lib/coaches";
+import { decodeAudio, runAnalysis } from "@/lib/audio";
 export function PitchChart({ analysis }: { analysis: Analysis }) {
   const pitched = analysis.frames.filter((f) => f.hz),
     midi = (hz: number) => 69 + 12 * Math.log2(hz / 440),
@@ -77,10 +78,21 @@ export function PitchChart({ analysis }: { analysis: Analysis }) {
         <path
           d={d}
           fill="none"
-          stroke="#598675"
+          stroke="var(--accent)"
           strokeWidth="2.5"
           strokeLinecap="round"
         />
+        {pitched
+          .filter((_, i) => i % 3 === 0)
+          .map((f, i) => (
+            <circle
+              key={i}
+              cx={x(f.time)}
+              cy={y(midi(f.hz!))}
+              r="1.5"
+              fill="var(--accent)"
+            />
+          ))}
         {[0, 0.25, 0.5, 0.75, 1].map((n) => (
           <text
             key={n}
@@ -93,10 +105,27 @@ export function PitchChart({ analysis }: { analysis: Analysis }) {
         ))}
       </svg>
       <p className="small muted">
-        Green: detected pitch · Gaps: low confidence
+        Blue: detected pitch · Gaps: low confidence
         {analysis.exercise ? " · Dashed gold: defined targets" : ""}. Solo
         singing works best; pitch estimates may include octave errors.
       </p>
+      {!pitched.length && (
+        <div className="chart-empty">
+          <strong>No usable pitch detected in this take.</strong>
+          <span>
+            Try the microphone check, move closer, or upload a clear solo
+            recording. Playback can be audible even when the recording is too
+            quiet or noisy for pitch detection.
+          </span>
+        </div>
+      )}
+      {pitched.length > 0 && analysis.score === null && !analysis.exercise && (
+        <p className="small muted">
+          Pitch is shown above. A steadiness score needs at least three
+          sustained windows; short notes and slides can still appear on the
+          graph. Try Hold a note for a scored reference.
+        </p>
+      )}
     </div>
   );
 }
@@ -109,6 +138,7 @@ export default function Review({
   onDelete,
   onDeleteAudio,
   onRange,
+  onReanalyze,
 }: {
   session: Session;
   sessions: Session[];
@@ -118,12 +148,23 @@ export default function Review({
   onDelete?: () => void;
   onDeleteAudio?: () => void;
   onRange?: (low: number, high: number) => void;
+  onReanalyze?: (session: Session, audio: Blob) => Promise<void>;
 }) {
   const a = session.analysis,
     previous = previousAttempt(session, sessions),
     [url, setUrl] = useState(""),
     [audioError, setAudioError] = useState(""),
+    [reanalyzing, setReanalyzing] = useState(false),
+    [reanalysisStatus, setReanalysisStatus] = useState(""),
+    [loop, setLoop] = useState(false),
+    [loopStart, setLoopStart] = useState(0),
+    [loopEnd, setLoopEnd] = useState(
+      Math.round(session.analysis.duration * 10) / 10,
+    ),
+    [audioType, setAudioType] = useState(""),
+    cancelReanalysis = useRef<() => void>(() => {}),
     player = useRef<HTMLAudioElement>(null);
+  useEffect(() => () => cancelReanalysis.current(), []);
   useEffect(() => {
     let active = true,
       objectUrl = "";
@@ -134,6 +175,7 @@ export default function Review({
           audio ||
           (session.audioSaved ? await getAudio(session.id) : undefined);
         if (b && active) {
+          setAudioType(b.type);
           objectUrl = URL.createObjectURL(b);
           setUrl(objectUrl);
         }
@@ -150,6 +192,54 @@ export default function Review({
     previous && a.score !== null && previous.analysis.score !== null
       ? a.score - previous.analysis.score
       : null;
+  const validLoop =
+    loopStart >= 0 && loopEnd > loopStart + 0.2 && loopEnd <= a.duration + 0.15;
+  const playSelection = () => {
+    if (!player.current || !validLoop) return;
+    player.current.currentTime = loopStart;
+    void player.current
+      .play()
+      .catch(() =>
+        setAudioError("Press play in the audio controls to enable playback."),
+      );
+  };
+  async function reanalyze() {
+    if (!onReanalyze) return;
+    setReanalyzing(true);
+    setAudioError("");
+    setReanalysisStatus("");
+    player.current?.pause();
+    let cancelled = false;
+    cancelReanalysis.current = () => {
+      cancelled = true;
+    };
+    try {
+      const b = audio || (await getAudio(session.id));
+      if (!b)
+        throw new Error(
+          "Saved audio is no longer available. Upload or record a new take.",
+        );
+      const decoded = await decodeAudio(b);
+      if (cancelled) return;
+      const task = runAnalysis(decoded.samples, decoded.sampleRate, a.exercise);
+      cancelReanalysis.current = () => {
+        cancelled = true;
+        task.cancel();
+      };
+      const analysis = await task.promise;
+      if (cancelled) return;
+      await onReanalyze({ ...session, analysis }, b);
+      if (!cancelled)
+        setReanalysisStatus(
+          "Updated this take with the latest detector. Your saved audio was kept.",
+        );
+    } catch (e) {
+      if (!cancelled) setAudioError((e as Error).message);
+    } finally {
+      if (!cancelled) setReanalyzing(false);
+      cancelReanalysis.current = () => {};
+    }
+  }
   return (
     <div className="review-stack">
       <div className="review-banner">
@@ -189,6 +279,21 @@ export default function Review({
             src={url}
             controls
             preload="metadata"
+            onTimeUpdate={() => {
+              const p = player.current;
+              if (
+                loop &&
+                validLoop &&
+                p &&
+                !p.paused &&
+                p.currentTime >= loopEnd
+              ) {
+                p.currentTime = loopStart;
+              }
+            }}
+            onEnded={() => {
+              if (loop && validLoop) playSelection();
+            }}
             onError={() =>
               setAudioError(
                 "This browser could not play the saved audio. Try a different browser.",
@@ -200,6 +305,78 @@ export default function Review({
             Audio wasn’t saved with this session. Measurements are still here;
             timestamp playback needs saved audio.
           </p>
+        )}
+        {url && (
+          <div className="audio-tools">
+            <div className="form-two">
+              <label>
+                Phrase start (seconds)
+                <input
+                  type="number"
+                  min="0"
+                  max={a.duration}
+                  step="0.1"
+                  value={loopStart}
+                  onChange={(e) => setLoopStart(Number(e.target.value))}
+                />
+              </label>
+              <label>
+                Phrase end (seconds)
+                <input
+                  type="number"
+                  min="0"
+                  max={a.duration + 0.1}
+                  step="0.1"
+                  value={loopEnd}
+                  onChange={(e) => setLoopEnd(Number(e.target.value))}
+                />
+              </label>
+            </div>
+            <label className="inline-check">
+              <input
+                type="checkbox"
+                checked={loop}
+                disabled={!validLoop}
+                onChange={(e) => setLoop(e.target.checked)}
+              />
+              Loop selected phrase
+            </label>
+            {!validLoop && (
+              <p className="small error">
+                Choose a phrase of at least 0.2 seconds within this take.
+              </p>
+            )}
+            <div className="tool-actions">
+              <button
+                className="button secondary"
+                disabled={!validLoop}
+                onClick={playSelection}
+              >
+                Play selected phrase
+              </button>
+              <a
+                className="text-button"
+                href={url}
+                download={`${session.title.replace(/[^a-z0-9_-]/gi, "-").slice(0, 70) || "musecoach-take"}.${audioType.includes("wav") ? "wav" : audioType.includes("mpeg") ? "mp3" : audioType.includes("mp4") ? "m4a" : audioType.includes("ogg") ? "ogg" : "webm"}`}
+              >
+                Download audio
+              </a>
+              {onReanalyze && (
+                <button
+                  className="text-button"
+                  disabled={reanalyzing}
+                  onClick={() => void reanalyze()}
+                >
+                  {reanalyzing ? "Reanalysing…" : "Reanalyse saved audio"}
+                </button>
+              )}
+            </div>
+            {reanalysisStatus && (
+              <p className="small" role="status">
+                {reanalysisStatus}
+              </p>
+            )}
+          </div>
         )}
         {audioError && (
           <p role="alert" className="error">
@@ -251,10 +428,12 @@ export default function Review({
           <summary>How the score is calculated</summary>
           <p className="small">{a.formula}</p>
           <p className="small muted">
-            Confidence threshold 0.85; silence floor 0.008 RMS; 65–1000 Hz
-            detector. Recording gain affects loudness. Confidence means periodic
-            audio, not proof of a human voice. No reliable inference about
-            breath technique, vocal health, vocal type, lyrics, tone quality, or
+            {a.version === "yin-1.0"
+              ? "This take uses the older detector. Reanalyse saved audio to use improved quiet-input detection."
+              : "Confidence threshold 0.80; quiet-input floor 0.0001 RMS; 55–1400 Hz detector."}{" "}
+            Recording gain affects loudness. Confidence means periodic audio,
+            not proof of a human voice. No reliable inference about breath
+            technique, vocal health, vocal type, lyrics, tone quality, or
             emotional intent is made.
           </p>
         </details>

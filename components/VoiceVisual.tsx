@@ -2,18 +2,18 @@
 
 import { useState, type CSSProperties } from "react";
 import { Pause, Play } from "lucide-react";
+import { coaches, coachPreviewMessages } from "@/lib/coaches";
+import { CoachId } from "@/lib/types";
 
-const messages = [
-  { name: "Sunny", message: "A little courage. One more try.", initial: "S" },
-  { name: "Theo", message: "Let’s find your next small step.", initial: "T" },
-  {
-    name: "Kai",
-    message: "Your voice. Your pace. You’ve got this.",
-    initial: "K",
-  },
-];
-
-export default function VoiceVisual() {
+export default function VoiceVisual({ coach = "Sunny" }: { coach?: CoachId }) {
+  const messages = [
+    coaches.find((c) => c.id === coach)!,
+    ...coaches.filter((c) => c.id !== coach),
+  ].map((c) => ({
+    name: c.id,
+    message: coachPreviewMessages[c.id],
+    initial: c.id[0],
+  }));
   const [paused, setPaused] = useState(false);
   return (
     <div className={`voice-visual${paused ? " is-paused" : ""}`}>
@@ -65,7 +65,7 @@ export default function VoiceVisual() {
               width="3"
               height={height}
               rx="1.5"
-              fill={i % 5 === 0 ? "#efbd92" : "#c6d8b8"}
+              fill={i % 5 === 0 ? "#f1c89f" : "#b8d9ff"}
               style={
                 {
                   "--wave-duration": `${1.2 + (i % 7) * 0.19}s`,
@@ -84,6 +84,7 @@ export default function VoiceVisual() {
           <div
             className={`voice-coach-bubble voice-coach-bubble-${i}`}
             key={item.name}
+            style={{ animationDelay: `${i * 6}s` }}
           >
             <span className="voice-coach-initial" aria-hidden="true">
               {item.initial}

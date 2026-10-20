@@ -4,9 +4,6 @@ test("exercise choice applies immediately while network navigation is delayed", 
   page,
 }) => {
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "Explore first", exact: true })
-    .click();
   await page.getByRole("link", { name: "Practice", exact: true }).click();
   await expect(page).toHaveURL(/\/practice$/);
   let selectionRequested = false;

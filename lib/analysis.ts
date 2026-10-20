@@ -1,6 +1,7 @@
 import { Analysis, Exercise, PitchFrame } from "./types";
-import { hzMidi, noteName } from "./exercises";
-export const ANALYSIS_VERSION = "yin-1.0";
+import { hzMidi, noteName, isSequenceExercise } from "./exercises";
+export const ANALYSIS_VERSION = "yin-1.1";
+export const PITCH_CONFIDENCE = 0.8;
 export const quantile = (values: number[], p: number) => {
   const s = [...values].sort((a, b) => a - b);
   return s.length
@@ -17,10 +18,13 @@ export function detectPitch(
   mean /= frame.length;
   for (const x of frame) energy += (x - mean) ** 2;
   const rms = Math.sqrt(energy / frame.length);
-  if (rms < 0.008) return { hz: null, confidence: 0, rms };
-  const min = Math.floor(sampleRate / 1000),
+  // Periodicity is amplitude-independent. Quiet phone recordings must not be
+  // discarded by a gate intended for normalised studio audio (-42 dBFS).
+  if (!Number.isFinite(rms) || rms < 0.0001)
+    return { hz: null, confidence: 0, rms: Number.isFinite(rms) ? rms : 0 };
+  const min = Math.max(2, Math.floor(sampleRate / 1400)),
     max = Math.min(
-      Math.floor(sampleRate / 65),
+      Math.floor(sampleRate / 55),
       Math.floor(frame.length / 2) - 1,
     ),
     half = Math.floor(frame.length / 2);
@@ -36,7 +40,7 @@ export function detectPitch(
     d[tau] = sum ? (v * tau) / sum : 1;
   }
   for (let tau = min; tau < max; tau++) {
-    if (d[tau] < 0.15) {
+    if (d[tau] < 1 - PITCH_CONFIDENCE) {
       while (tau + 1 < max && d[tau + 1] < d[tau]) tau++;
       const conf = 1 - d[tau];
       const prev = d[tau - 1],
@@ -44,7 +48,7 @@ export function detectPitch(
         den = 2 * (2 * d[tau] - next - prev);
       const refined = tau + (den ? (next - prev) / den : 0);
       return {
-        hz: conf >= 0.85 ? sampleRate / refined : null,
+        hz: conf >= PITCH_CONFIDENCE ? sampleRate / refined : null,
         confidence: conf,
         rms,
       };
@@ -58,7 +62,9 @@ export function summarize(
   clipping: number,
   exercise?: Exercise,
 ): Analysis {
-  const voiced = frames.filter((f) => f.hz !== null && f.confidence >= 0.85);
+  const voiced = frames.filter(
+    (f) => f.hz !== null && f.confidence >= PITCH_CONFIDENCE,
+  );
   const hop = frames.length > 1 ? frames[1].time - frames[0].time : 0.05;
   const voicedSeconds = voiced.length * hop,
     coverage = voicedSeconds / duration;
@@ -86,6 +92,23 @@ export function summarize(
   };
   result.metrics.push(
     {
+      key: "inputLevel",
+      label: "Recording level",
+      value: Math.round(
+        20 *
+          Math.log10(
+            Math.max(
+              Math.sqrt(
+                frames.reduce((sum, f) => sum + f.rms ** 2, 0) /
+                  Math.max(1, frames.length),
+              ),
+              1e-6,
+            ),
+          ),
+      ),
+      unit: "dBFS",
+    },
+    {
       key: "voiced",
       label: "Confident pitch detected",
       value: Math.round(coverage * 100),
@@ -98,6 +121,16 @@ export function summarize(
       unit: "%",
     },
   );
+  if (
+    voiced.length &&
+    quantile(
+      voiced.map((f) => f.rms),
+      0.5,
+    ) < 0.004
+  )
+    result.warnings.push(
+      "Your recording is quiet, but usable pitch was detected. Move a little closer to the microphone for a cleaner next take; there is no need to sing louder.",
+    );
   if (clipping > 0.005)
     result.warnings.push(
       "Clipping detected. Move farther from the microphone or lower its input gain, then record again.",
@@ -270,7 +303,7 @@ export function scoreExercise(frames: PitchFrame[], exercise: Exercise) {
   let score = pitch;
   let formula =
     "Exercise score = percentage of confidently pitched target-interior frames within ±50 cents of the defined reference. Missing audio is reported as coverage, not pitch error.";
-  if (exercise.kind === "melody" && timingErrors.length >= 4) {
+  if (isSequenceExercise(exercise.kind) && timingErrors.length >= 4) {
     const ms = quantile(timingErrors, 0.5) * 1000,
       timing = Math.round(Math.max(0, 100 - ms / 5));
     metrics.push({
@@ -283,7 +316,7 @@ export function scoreExercise(frames: PitchFrame[], exercise: Exercise) {
     score = Math.round(pitch * 0.8 + timing * 0.2);
     formula =
       "Exercise score = 80% pitch accuracy (±50 cents) + 20% onset timing score (100 − median onset error in ms / 5, clamped to 0–100).";
-  } else if (exercise.kind === "melody")
+  } else if (isSequenceExercise(exercise.kind))
     formula +=
       " Timing is unavailable: fewer than four distinct nearby onsets; only pitch is scored.";
   metrics.push({

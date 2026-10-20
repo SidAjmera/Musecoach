@@ -33,13 +33,21 @@ import {
   saveProfile,
   saveSession,
 } from "@/lib/storage";
-import { exerciseInfo, makeExercise, noteName } from "@/lib/exercises";
+import {
+  exerciseInfo,
+  makeExercise,
+  noteName,
+  exerciseKinds,
+  exerciseSpan,
+} from "@/lib/exercises";
 import VoiceVisual from "./VoiceVisual";
 import ProfileEditor from "./ProfileEditor";
 import Recorder from "./Recorder";
 import Review from "./Review";
 import Coach from "./Coach";
 import ProgressTrend from "./ProgressTrend";
+import PitchTuner from "./PitchTuner";
+import ExerciseLibrary from "./ExerciseLibrary";
 const navigation = [
   { path: "/", label: "Home", icon: House },
   { path: "/record", label: "Record & Review", icon: Mic },
@@ -62,10 +70,6 @@ export default function Musecoach() {
     try {
       const p = readProfile();
       if (p) setProfile(p);
-      else {
-        setFirst(true);
-        setEditing(true);
-      }
     } catch {
       setError(
         "Profile storage is unavailable. Your browser may block local storage.",
@@ -129,8 +133,8 @@ export default function Musecoach() {
         await clearData();
         setProfile(defaultProfile);
         setSessions([]);
-        setFirst(true);
-        setEditing(true);
+        setFirst(false);
+        setEditing(false);
         router.push("/");
         setNotice("All local Musecoach data has been deleted.");
       } else if (detail) {
@@ -346,7 +350,7 @@ export default function Musecoach() {
                       15–60 seconds. A small start is a real start.
                     </span>
                   </div>
-                  <VoiceVisual />
+                  <VoiceVisual coach={profile.coach} />
                 </div>
                 <aside className="next-card">
                   <div className="section-heading">
@@ -515,6 +519,10 @@ export default function Musecoach() {
                   onPractice={practice}
                   onDelete={() => setConfirm("session")}
                   onDeleteAudio={() => setConfirm("audio")}
+                  onReanalyze={async (updated, audio) => {
+                    await saveSession(updated, audio);
+                    setSessions(await listSessions());
+                  }}
                   onRange={(low, high) =>
                     updateProfile({
                       ...profile,
@@ -621,7 +629,7 @@ function RecordingRoute({
   onSave: (s: Session, b?: Blob) => Promise<void>;
 }) {
   try {
-    const valid = ["match", "hold", "melody"].includes(kind);
+    const valid = exerciseKinds.includes(kind);
     const exercise = valid
       ? makeExercise(kind, Number.isFinite(base) ? base : 60, profile)
       : undefined;
@@ -655,9 +663,7 @@ function Practice({
   onRange: () => void;
   onSelect: (k: ExerciseKind) => void;
 }) {
-  const routeSelection = ["match", "hold", "melody"].includes(kind)
-    ? kind
-    : "hold";
+  const routeSelection = exerciseKinds.includes(kind) ? kind : "hold";
   const [selected, setSelected] = useState<ExerciseKind>(routeSelection),
     [base, setBase] = useState(
       Math.max(profile.low, Math.min(60, profile.high - 4)),
@@ -669,28 +675,21 @@ function Practice({
     setBase((value) =>
       Math.max(
         profile.low,
-        Math.min(value, profile.high - (selected === "melody" ? 4 : 0)),
+        Math.min(value, profile.high - exerciseSpan(selected)),
       ),
     );
   }, [selected, profile.low, profile.high]);
   return (
     <>
-      <div className="practice-tabs" role="group" aria-label="Exercise types">
-        {(["match", "hold", "melody"] as ExerciseKind[]).map((k) => (
-          <button
-            key={k}
-            className={`chip ${selected === k ? "selected" : ""}`}
-            aria-pressed={selected === k}
-            onClick={() => {
-              setSelected(k);
-              onSelect(k);
-              setError("");
-            }}
-          >
-            {exerciseInfo[k].label}
-          </button>
-        ))}
-      </div>
+      <ExerciseLibrary
+        selected={selected}
+        profile={profile}
+        onSelect={(kind) => {
+          setSelected(kind);
+          onSelect(kind);
+          setError("");
+        }}
+      />
       <div className="practice-studio">
         <section className={`panel exercise-main practice-${selected}`}>
           <span className="exercise-doodle">{current.icon}</span>
@@ -718,10 +717,7 @@ function Practice({
                 {
                   length: Math.max(
                     0,
-                    profile.high -
-                      profile.low +
-                      1 -
-                      (selected === "melody" ? 4 : 0),
+                    profile.high - profile.low + 1 - exerciseSpan(selected),
                   ),
                 },
                 (_, i) => profile.low + i,
@@ -760,6 +756,7 @@ function Practice({
           )}
         </section>
         <aside>
+          <PitchTuner />
           <section className="panel">
             <span className="eyebrow">KEEP IT COMFORTABLE</span>
             <h3>Easy is a good place to start.</h3>

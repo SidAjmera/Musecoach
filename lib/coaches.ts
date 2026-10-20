@@ -1,4 +1,18 @@
 import { CoachId, Profile } from "./types";
+export const coachPreviewMessages: Record<CoachId, string> = {
+  Sunny:
+    "That tiny win? We’re celebrating it. Let’s try one happy little note!",
+  Jules:
+    "Studio rule: isolate one phrase. Replay it. Make the next take count.",
+  Nova: "Your entrance is the moment. Pick one phrase and give it main-character energy.",
+  Sage: "There’s no rush. Try a gentle hum, rest, and begin again when you’re ready.",
+  Rex: "One note. One clear target. The microphone isn’t judging your outfit.",
+  Cleo: "Imagine who you’re singing to. Let one phrase carry the story.",
+  Theo: "Try the same reference twice. We’ll compare the pitch patterns, one detail at a time.",
+  Lola: "The scene: you have one line to steal the show. Give that phrase a character!",
+  Ash: "Try that phrase two different ways. Keep the version that sounds like you.",
+  Kai: "Today’s mini-mission: one warm-up, one take, one useful retry. Ready?",
+};
 export const coaches: {
   id: CoachId;
   defaultVersion: "female" | "male";

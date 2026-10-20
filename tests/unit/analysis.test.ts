@@ -7,7 +7,12 @@ import {
 } from "../../lib/analysis";
 import { defaultProfile, PitchFrame } from "../../lib/types";
 import { coaches, measuredIntro } from "../../lib/coaches";
-import { makeExercise, midiHz } from "../../lib/exercises";
+import {
+  makeExercise,
+  midiHz,
+  exerciseKinds,
+  exerciseSpan,
+} from "../../lib/exercises";
 const RATE = 12000;
 function sine(hz: number, length = 1024, amp = 0.3) {
   return Float32Array.from(
@@ -16,6 +21,33 @@ function sine(hz: number, length = 1024, amp = 0.3) {
   );
 }
 describe("confidence-filtered YIN", () => {
+  it("finds and scores a quiet voice-like signal with harmonics, vibrato and breath noise", () => {
+    let phase = 0,
+      seed = 73;
+    const samples = Float32Array.from({ length: RATE * 16 }, (_, i) => {
+      const t = i / RATE;
+      phase +=
+        (2 *
+          Math.PI *
+          196 *
+          2 ** ((25 * Math.sin(2 * Math.PI * 5 * t)) / 1200)) /
+        RATE;
+      seed = (1664525 * seed + 1013904223) >>> 0;
+      const envelope = t % 2.2 < 1.8 ? Math.min(1, (t % 2.2) * 15) : 0;
+      return (
+        envelope *
+        (0.0025 *
+          (Math.sin(phase) +
+            0.5 * Math.sin(2 * phase) +
+            0.25 * Math.sin(3 * phase)) +
+          0.0002 * (seed / 2 ** 32 - 0.5))
+      );
+    });
+    const result = analyzeSamples(samples, RATE);
+    expect(result.coverage).toBeGreaterThan(0.6);
+    expect(result.frames.some((f) => f.hz !== null)).toBe(true);
+    expect(result.score).not.toBeNull();
+  });
   it.each([82.41, 130.81, 220, 440, 880])(
     "detects a known %s Hz pitch within 8 cents",
     (hz) => {
@@ -37,7 +69,7 @@ describe("confidence-filtered YIN", () => {
   });
   it("rejects silence and very quiet signals", () => {
     expect(detectPitch(new Float32Array(1024), RATE).hz).toBeNull();
-    expect(detectPitch(sine(220, 1024, 0.0002), RATE).hz).toBeNull();
+    expect(detectPitch(sine(220, 1024, 0.00002), RATE).hz).toBeNull();
   });
   it("rejects deterministic broadband noise", () => {
     let seed = 12;
@@ -158,8 +190,12 @@ describe("defined exercise scoring", () => {
     ).toBeNull();
   });
   it("keeps targets within the singer’s range independent of presentation", () => {
-    for (const kind of ["match", "hold", "melody"] as const) {
+    for (const kind of exerciseKinds) {
       const p = { ...defaultProfile, low: 55, high: 65 };
+      if (exerciseSpan(kind) > p.high - p.low) {
+        expect(() => makeExercise(kind, 80, p)).toThrow("comfortable range");
+        continue;
+      }
       const plan = makeExercise(kind, 80, p);
       expect(plan.targets.every((t) => t.midi >= 55 && t.midi <= 65)).toBe(
         true,
@@ -169,4 +205,30 @@ describe("defined exercise scoring", () => {
       "comfortable range",
     );
   });
+  it.each(exerciseKinds)(
+    "scores the defined %s reference and rejects wrong notes",
+    (kind) => {
+      const plan = makeExercise(kind, 55, defaultProfile);
+      expect(
+        plan.targets.every(
+          (t) => t.start >= 3 && t.start + t.duration <= plan.duration,
+        ),
+      ).toBe(true);
+      const frames = (transpose: number) =>
+        Array.from({ length: 360 }, (_, i) => {
+          const time = i * 0.05,
+            target = plan.targets.find(
+              (t) => time >= t.start && time < t.start + t.duration,
+            );
+          return {
+            time,
+            hz: target ? midiHz(target.midi + transpose) : null,
+            rms: target ? 0.1 : 0,
+            confidence: target ? 0.98 : 0,
+          };
+        });
+      expect(scoreExercise(frames(0), plan).score).toBeGreaterThanOrEqual(98);
+      expect(scoreExercise(frames(6), plan).score).toBeLessThanOrEqual(20);
+    },
+  );
 });

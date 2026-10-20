@@ -105,7 +105,7 @@ export default function ProgressTrend({ sessions }: { sessions: Session[] }) {
                     )
                     .join(" ")}
                   fill="none"
-                  stroke="#5f8979"
+                  stroke="var(--accent)"
                   strokeWidth="3"
                 />
                 {values.map((p, i) => (
@@ -114,7 +114,7 @@ export default function ProgressTrend({ sessions }: { sessions: Session[] }) {
                       cx={30 + (i / (values.length - 1)) * 660}
                       cy={y(p.value)}
                       r="5"
-                      fill="#5f8979"
+                      fill="var(--accent)"
                     />
                     <text
                       x={30 + (i / (values.length - 1)) * 660}

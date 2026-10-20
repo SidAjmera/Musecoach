@@ -9,7 +9,37 @@ export type CoachId =
   | "Lola"
   | "Ash"
   | "Kai";
-export type ExerciseKind = "match" | "hold" | "melody";
+export type ExerciseKind =
+  | "match"
+  | "hold"
+  | "melody"
+  | "intervals"
+  | "scale"
+  | "arpeggio"
+  | "step-up"
+  | "step-down"
+  | "thirds"
+  | "minor-thirds"
+  | "fourths"
+  | "fifths"
+  | "octaves"
+  | "minor-scale"
+  | "major-octave"
+  | "descending-scale"
+  | "pentatonic"
+  | "chromatic"
+  | "minor-arpeggio"
+  | "descending-arpeggio"
+  | "major-triad"
+  | "minor-triad"
+  | "three-note-turn"
+  | "do-re-mi"
+  | "pitch-memory"
+  | "short-pulses"
+  | "long-short"
+  | "offbeat"
+  | "rest-reset"
+  | "descending-thirds";
 export interface Profile {
   name: string;
   experience: string;

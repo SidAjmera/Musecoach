@@ -3,9 +3,6 @@ import { mkdirSync } from "node:fs";
 
 async function openCoach(page: Page) {
   await page.goto("/coach");
-  await page
-    .getByRole("button", { name: "Explore first", exact: true })
-    .click();
 }
 async function saveConnection(page: Page, remember = false) {
   await page.getByLabel("API key", { exact: true }).fill("private-fixture-key");
@@ -82,9 +79,6 @@ test("BYOK saves only by opt-in, survives navigation and forgets keys", async ({
   try {
     const other = await otherContext.newPage();
     await other.goto(new URL("/coach", page.url()).href);
-    await other
-      .getByRole("button", { name: "Explore first", exact: true })
-      .click();
     await expect(
       other.getByRole("button", { name: "Send message", exact: true }),
     ).toBeDisabled();
@@ -114,8 +108,9 @@ test("BYOK saves only by opt-in, survives navigation and forgets keys", async ({
     .getByRole("dialog")
     .getByRole("button", { name: "Delete all local data", exact: true })
     .click();
+  await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Meet your voice.", exact: true }),
+    page.getByRole("heading", { name: "Hello, singer." }),
   ).toBeVisible();
   expect(
     await page.evaluate(() => localStorage.getItem("musecoach-ai-connection")),

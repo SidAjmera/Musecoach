@@ -6,15 +6,14 @@ test("home waveform, coach messages and motion controls", async ({
 }, testInfo) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "Explore first", exact: true })
-    .click();
   const visual = page.locator(".voice-visual");
   await expect(
     visual.getByText("Your coach, for you.", { exact: true }),
   ).toBeVisible();
   await expect(
-    visual.getByText("A little courage. One more try."),
+    visual.getByText(
+      "That tiny win? We’re celebrating it. Let’s try one happy little note!",
+    ),
   ).toBeVisible();
   await expect(
     page.locator(".hero").getByRole("img", { name: /coach illustration/ }),

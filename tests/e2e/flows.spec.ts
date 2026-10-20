@@ -43,7 +43,10 @@ const singing = wav("singing.wav"),
   silence = wav("silence.wav", 16, "silence");
 async function onboard(page: Page) {
   await page.goto("/");
-  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("dialog")).not.toBeVisible();
+  await page
+    .getByRole("button", { name: "Edit your profile", exact: true })
+    .click();
   await page.getByLabel("What should we call you?").fill("Ari");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByRole("button", { name: /Theo Curious/ }).click();
@@ -163,8 +166,7 @@ test("complete onboarding → upload → review → exercise → history, reload
     .getByRole("button", { name: "Delete all local data", exact: true })
     .last()
     .click();
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await page.getByRole("button", { name: "Explore first" }).click();
+  await expect(page.getByRole("dialog")).not.toBeVisible();
   await page.getByRole("link", { name: "Progress", exact: true }).click();
   await expect(page.getByText("No sessions here yet.")).toBeVisible();
   expect(errors).toEqual([]);
@@ -340,7 +342,6 @@ test("main screens have accessible layouts, keyboard focus, and visual snapshots
 }, testInfo) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await page.getByRole("button", { name: "Explore first" }).click();
   for (const [path, name] of [
     ["/", "home"],
     ["/record", "record"],

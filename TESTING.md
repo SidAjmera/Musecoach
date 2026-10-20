@@ -35,3 +35,15 @@ The latest complete browser run passed all 20 tests against the production build
 Provider-adapter update: all four native request/response formats, authentication headers, model defaults and overrides, aliases, generic-key configuration, OpenAI-compatible endpoints, custom adapters, unsafe/invalid endpoint rejection, public status redaction, missing configuration, quotas, authentication failures, timeouts, malformed/truncated/blocked responses, and Gemini thought filtering are covered by mocked unit tests. Live third-party API calls require the user’s own credentials and have not been performed.
 
 BYOK unit checks cover rejection of missing visitor credentials despite an operator key, each native provider's visitor authentication headers, concurrent visitor isolation, omission of keys from prompts, input validation, operator-pinned compatible endpoints, safe authentication errors, opt-in key persistence, removal when switching back to memory-only, and forgetting keys even when browser storage removal fails. Credentials in tests are fixtures; no live provider requests or paid API usage occurred.
+
+## Recording recovery and 30-exercise release — 20 October 2026
+
+- `pnpm test`: 184 passing checks across 9 files. New coverage reproduces quiet voice-like input with harmonics, vibrato and breath noise; opposite-phase stereo channel selection; all 30 correct/wrong references; unique exercise patterns, bounded timings and comfortable-range limits.
+- `pnpm typecheck`: passed.
+- `pnpm build`: passed production build.
+- Production browser suite: 30 tests passed (15 desktop + 15 mobile), followed by 2 additional passing exercise-library tests. Every one of the 30 exercises was opened, its reference played, and its generated target recording genuinely decoded/scored on both layouts. Search, categories, empty search and restricted-range controls passed separately.
+- Quiet WAV upload and quiet input through the actual MediaRecorder → decode → worker → review pipeline produced populated graphs and numeric scores. Antiphase stereo remained measurable. Silence and noise remain unscored.
+- A saved legacy failed take was reanalysed without duplicating history or losing audio. Phrase loop playback and original-audio download passed.
+- Home opens without a profile popup. Blue light/dark screens passed accessibility scans and horizontal-overflow checks. Desktop and mobile screenshots were visually inspected.
+
+These checks use generated signals and Chromium mobile emulation. They do not establish performance for every physical phone microphone, Safari/iOS codec, or real singing voice. No personal microphone or live provider key was used. Human-device checks above remain relevant.
