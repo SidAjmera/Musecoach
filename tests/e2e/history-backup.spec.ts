@@ -257,3 +257,113 @@ test("invalid backup preview cannot alter local history or profile", async ({
     await page.evaluate(() => localStorage.getItem("musecoach-ai-connection")),
   ).toBeNull();
 });
+
+test("session notes and renaming preserve audio and measured results without sharing notes with AI", async ({
+  page,
+}) => {
+  await record(page, "Before notes", true);
+  const sessionId = page.url().split("/").pop()!;
+  await page
+    .getByText("Rename this take or add practice notes", { exact: true })
+    .click();
+  const editor = page.getByRole("region", {
+    name: "Session name and private notes",
+  });
+  await editor
+    .getByLabel("Session title", { exact: true })
+    .fill("Focused vowel");
+  const note = "Private note: gentle entry, then leave a gap.";
+  await editor.getByLabel("Private practice notes", { exact: true }).fill(note);
+  await editor
+    .getByRole("button", { name: "Save session notes", exact: true })
+    .click();
+  await expect(editor.getByRole("status")).toContainText(
+    "audio and measurements were kept",
+  );
+  await expect(page.locator("audio")).toHaveAttribute("src", /^blob:/);
+  await expect(page.locator(".score-circle strong")).toHaveText("100");
+  await page.reload();
+  await page
+    .getByText("Rename this take or add practice notes", { exact: true })
+    .click();
+  await expect(editor.getByLabel("Session title", { exact: true })).toHaveValue(
+    "Focused vowel",
+  );
+  await expect(
+    editor.getByLabel("Private practice notes", { exact: true }),
+  ).toHaveValue(note);
+  const accessibility = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(
+    accessibility.violations.map((v) => ({
+      id: v.id,
+      nodes: v.nodes.map((n) => n.target),
+    })),
+  ).toEqual([]);
+  await page
+    .getByRole("button", { name: "Switch to dark mode", exact: true })
+    .click();
+  const darkNotes = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(
+    darkNotes.violations.map((v) => ({
+      id: v.id,
+      nodes: v.nodes.map((n) => n.target),
+    })),
+  ).toEqual([]);
+  const backup = await openBackup(page);
+  const downloaded = page.waitForEvent("download");
+  await backup
+    .getByRole("button", { name: "Download history backup", exact: true })
+    .click();
+  const payload = JSON.parse(
+    readFileSync((await (await downloaded).path())!, "utf8"),
+  );
+  expect(payload.sessions).toHaveLength(1);
+  expect(payload.sessions[0]).toMatchObject({
+    id: sessionId,
+    title: "Focused vowel",
+    notes: note,
+  });
+  expect(payload.sessions[0].analysis.score).toBe(100);
+  await page.route("**/api/coach", async (route) => {
+    if (route.request().method() === "GET")
+      return route.fulfill({
+        json: { providers: [{ id: "gemini", label: "Gemini" }] },
+      });
+    expect(route.request().postData()).not.toContain(note);
+    return route.fulfill({
+      json: { reply: "Try the measured held-note exercise." },
+    });
+  });
+  await page.getByRole("link", { name: "My Coach", exact: true }).click();
+  await page
+    .getByLabel("API key", { exact: true })
+    .fill("notes-privacy-fixture");
+  await page
+    .getByRole("button", { name: "Save AI connection", exact: true })
+    .click();
+  await page
+    .getByLabel("Ask about your results or practice")
+    .fill("What should I try next?");
+  await page.getByRole("button", { name: "Send message", exact: true }).click();
+  await expect(
+    page.getByText("Try the measured held-note exercise.", { exact: true }),
+  ).toBeVisible();
+  await page.goto(`/session/${sessionId}`);
+  await page
+    .getByRole("button", { name: "Reanalyse saved audio", exact: true })
+    .click();
+  await expect(
+    page.getByText(/Updated this take with the latest detector/),
+  ).toBeVisible();
+  await page
+    .getByText("Rename this take or add practice notes", { exact: true })
+    .click();
+  await expect(
+    editor.getByLabel("Private practice notes", { exact: true }),
+  ).toHaveValue(note);
+  await expect(page.locator("audio")).toHaveAttribute("src", /^blob:/);
+});

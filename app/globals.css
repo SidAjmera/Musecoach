@@ -3336,3 +3336,14 @@ details p {
 .home-favorites .chips {
   margin: 14px 0;
 }
+.session-notes summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.session-notes form {
+  margin-top: 18px;
+}
+.session-notes form > label {
+  display: block;
+  margin: 14px 0;
+}

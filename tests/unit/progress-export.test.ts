@@ -38,13 +38,14 @@ it("exports only selected progress fields and keeps dates chronological", () => 
     key: "secret-fixture",
     audio: "private-audio-fixture",
     conversation: "private-chat-fixture",
+    notes: "private-notes-fixture",
   };
   const csv = progressCSV([
     extra,
     { ...base, id: "older", date: "2026-10-19T10:00:00Z", title: "Older" },
   ]);
   expect(csv).not.toMatch(
-    /secret-fixture|private-audio-fixture|private-chat-fixture/,
+    /secret-fixture|private-audio-fixture|private-chat-fixture|private-notes-fixture/,
   );
   expect(csv.indexOf('"Older"')).toBeLessThan(csv.indexOf('"My take"'));
 });

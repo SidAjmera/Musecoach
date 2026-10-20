@@ -236,3 +236,45 @@ test("a saved design is checked again after the comfortable range changes", asyn
     page.getByRole("link", { name: "Return to Practice", exact: true }),
   ).toBeVisible();
 });
+
+test("exercise AI settings explain when a remembered key cannot be removed from storage", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "musecoach-ai-connection",
+      JSON.stringify({
+        provider: "gemini",
+        key: "forget-failure-fixture",
+        model: "",
+        remembered: true,
+      }),
+    );
+    const remove = Storage.prototype.removeItem;
+    Storage.prototype.removeItem = function (key) {
+      if (key === "musecoach-ai-connection")
+        throw new DOMException("Blocked fixture", "SecurityError");
+      remove.call(this, key);
+    };
+  });
+  await page.goto("/practice");
+  const designer = page.getByRole("region", { name: "AI exercise design" });
+  await designer
+    .getByRole("button", { name: "Manage exercise AI connection", exact: true })
+    .click();
+  await designer
+    .getByText("Manage your AI connection", { exact: true })
+    .click();
+  await designer
+    .getByRole("button", { name: "Forget API key", exact: true })
+    .click();
+  await expect(designer.getByRole("alert")).toContainText(
+    "Browser storage could not be cleared",
+  );
+  await designer
+    .getByRole("button", { name: "Design my exercise", exact: true })
+    .click();
+  await expect(
+    designer.getByRole("group", { name: "API key needed" }),
+  ).toBeVisible();
+});

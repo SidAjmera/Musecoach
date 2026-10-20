@@ -17,6 +17,7 @@ import { getAudio } from "@/lib/storage";
 import { previousAttempt } from "@/lib/comparison";
 import { measuredIntro } from "@/lib/coaches";
 import { decodeAudio, runAnalysis } from "@/lib/audio";
+import SessionNotes from "./SessionNotes";
 export function PitchChart({ analysis }: { analysis: Analysis }) {
   const pitched = analysis.frames.filter((f) => f.hz),
     midi = (hz: number) => 69 + 12 * Math.log2(hz / 440),
@@ -143,6 +144,7 @@ export default function Review({
   onDeleteAudio,
   onRange,
   onReanalyze,
+  onMetadata,
 }: {
   session: Session;
   sessions: Session[];
@@ -153,6 +155,7 @@ export default function Review({
   onDeleteAudio?: () => void;
   onRange?: (low: number, high: number) => void;
   onReanalyze?: (session: Session, audio: Blob) => Promise<void>;
+  onMetadata?: (title: string, notes: string) => Promise<void>;
 }) {
   const a = session.analysis,
     provisional = a.range ? provisionalPracticeWindow(a.range) : undefined,
@@ -537,6 +540,7 @@ export default function Review({
           )}
         </section>
       )}
+      {onMetadata && <SessionNotes session={session} onSave={onMetadata} />}
       {onDelete && (
         <button className="text-button danger" onClick={onDelete}>
           <Trash2 size={15} /> Delete this session

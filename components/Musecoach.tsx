@@ -33,6 +33,8 @@ import {
   saveProfile,
   saveSession,
   restoreSessionHistory,
+  updateSessionMetadata,
+  updateSessionAnalysis,
 } from "@/lib/storage";
 import {
   exerciseInfo,
@@ -597,8 +599,12 @@ export default function Musecoach() {
                   onPractice={practice}
                   onDelete={() => setConfirm("session")}
                   onDeleteAudio={() => setConfirm("audio")}
-                  onReanalyze={async (updated, audio) => {
-                    await saveSession(updated, audio);
+                  onReanalyze={async (updated) => {
+                    await updateSessionAnalysis(updated.id, updated.analysis);
+                    setSessions(await listSessions());
+                  }}
+                  onMetadata={async (title, notes) => {
+                    await updateSessionMetadata(detail.id, title, notes);
                     setSessions(await listSessions());
                   }}
                   onRange={(low, high) =>

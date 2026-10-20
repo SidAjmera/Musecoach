@@ -25,6 +25,11 @@ it("round-trips supported measurements and profile without claiming to retain au
   expect(restored.sessions[0].analysis).toEqual(free.analysis);
   expect(restored.sessions[0].audioSaved).toBe(false);
   expect(restored.audioIncluded).toBe(false);
+  const notes = { ...free, notes: "Keep a gentle entry and leave a gap." };
+  expect(
+    parseHistoryBackup(historyBackupJSON(defaultProfile, [notes])).sessions[0]
+      .notes,
+  ).toBe(notes.notes);
 });
 it("carries favourites while keeping older profile backups compatible", () => {
   const profile = {

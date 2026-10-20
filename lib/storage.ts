@@ -1,4 +1,4 @@
-import { Profile, Session, defaultProfile } from "./types";
+import { Profile, Session, Analysis, defaultProfile } from "./types";
 import { forgetAIConnection } from "./ai-settings";
 import { exerciseKinds } from "./exercises";
 const DB = "musecoach-v1";
@@ -68,6 +68,61 @@ export async function saveSession(session: Session, audio?: Blob) {
   await transaction("readwrite", (s) =>
     s.put({ ...session, audioSaved: !!audio, audio }),
   );
+}
+async function updateStoredSession(
+  id: string,
+  change: (record: Session & { audio?: Blob }) => Session & { audio?: Blob },
+): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("sessions", "readwrite"),
+      store = tx.objectStore("sessions");
+    const request = store.get(id);
+    let missing = false;
+    request.onsuccess = () => {
+      if (!request.result) {
+        missing = true;
+        tx.abort();
+        return;
+      }
+      store.put(change(request.result));
+    };
+    tx.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+    const fail = () => {
+      db.close();
+      reject(
+        new Error(
+          missing
+            ? "This session is no longer in your history. Reload Progress."
+            : "Could not update this session. Check browser storage permissions or space.",
+        ),
+      );
+    };
+    tx.onerror = fail;
+    tx.onabort = fail;
+  });
+}
+export async function updateSessionMetadata(
+  id: string,
+  title: string,
+  notes: string,
+) {
+  const clean = title.trim();
+  if (!clean || clean.length > 80 || notes.length > 1000)
+    throw new Error(
+      "Use a session name of 1–80 characters and notes of up to 1,000 characters.",
+    );
+  await updateStoredSession(id, (record) => ({
+    ...record,
+    title: clean,
+    notes: notes.trim(),
+  }));
+}
+export async function updateSessionAnalysis(id: string, analysis: Analysis) {
+  await updateStoredSession(id, (record) => ({ ...record, analysis }));
 }
 export async function restoreSessionHistory(
   incoming: Session[],

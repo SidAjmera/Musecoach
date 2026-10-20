@@ -188,6 +188,7 @@ function session(value: unknown): Session {
     title: text(s.title, 200),
     context,
     audioSaved: false,
+    ...(s.notes === undefined ? {} : { notes: text(s.notes, 1000) }),
     analysis: {
       version: text(a.version, 60, false),
       duration,

@@ -116,6 +116,7 @@ export interface Session {
   analysis: Analysis;
   audioSaved: boolean;
   restored?: boolean;
+  notes?: string;
 }
 export const defaultProfile: Profile = {
   name: "",

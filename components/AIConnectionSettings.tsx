@@ -154,7 +154,13 @@ export default function AIConnectionSettings({
             setKey("");
             setStatus("");
             setError("");
-            onForget();
+            try {
+              onForget();
+            } catch {
+              setError(
+                "The key was disconnected from memory. Browser storage could not be cleared; clear this site’s data in browser settings.",
+              );
+            }
           }}
         >
           Forget API key
