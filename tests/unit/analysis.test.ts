@@ -57,6 +57,16 @@ describe("confidence-filtered YIN", () => {
       expect(pitch.confidence).toBeGreaterThan(0.85);
     },
   );
+  it.each([55, 65.41, 1046.5, 1318.51])(
+    "detects an extended-range %s Hz pitch within 12 cents",
+    (hz) => {
+      const pitch = detectPitch(sine(hz), RATE);
+      expect(pitch.hz).not.toBeNull();
+      // A 12 kHz signal has fewer samples per cycle at the upper boundary.
+      expect(Math.abs(1200 * Math.log2(pitch.hz! / hz))).toBeLessThan(12);
+      expect(pitch.confidence).toBeGreaterThan(0.85);
+    },
+  );
   it("handles harmonics and a DC offset", () => {
     const input = Float32Array.from(
       { length: 1024 },

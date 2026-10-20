@@ -281,3 +281,50 @@ test("quiet microphone capture is scored through MediaRecorder and tuner release
     ),
   ).toBe(true);
 });
+
+test("quiet MP4/AAC recording decodes and scores when the browser supports it", async ({
+  page,
+}) => {
+  await page.goto("/record");
+  const supported = await page.evaluate(() =>
+    MediaRecorder.isTypeSupported("audio/mp4"),
+  );
+  test.skip(!supported, "This browser does not record MP4/AAC.");
+  const bytes = await page.evaluate(async () => {
+    const context = new AudioContext();
+    await context.resume();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const destination = context.createMediaStreamDestination();
+    oscillator.frequency.value = 220;
+    gain.gain.value = 0.003;
+    oscillator.connect(gain);
+    gain.connect(destination);
+    const recorder = new MediaRecorder(destination.stream, {
+      mimeType: "audio/mp4",
+    });
+    const chunks: Blob[] = [];
+    recorder.ondataavailable = (event) => chunks.push(event.data);
+    const stopped = new Promise<void>((resolve) => {
+      recorder.onstop = () => resolve();
+    });
+    oscillator.start();
+    recorder.start(250);
+    await new Promise((resolve) => setTimeout(resolve, 16000));
+    recorder.stop();
+    await stopped;
+    oscillator.stop();
+    destination.stream.getTracks().forEach((track) => track.stop());
+    await context.close();
+    return Array.from(
+      new Uint8Array(
+        await new Blob(chunks, { type: "audio/mp4" }).arrayBuffer(),
+      ),
+    );
+  });
+  await review(page, {
+    name: "quiet-aac.m4a",
+    mimeType: "audio/mp4",
+    buffer: Buffer.from(bytes),
+  });
+});

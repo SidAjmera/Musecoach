@@ -38,7 +38,7 @@ BYOK unit checks cover rejection of missing visitor credentials despite an opera
 
 ## Recording recovery and 30-exercise release — 20 October 2026
 
-- `pnpm test`: 184 passing checks across 9 files. New coverage reproduces quiet voice-like input with harmonics, vibrato and breath noise; opposite-phase stereo channel selection; all 30 correct/wrong references; unique exercise patterns, bounded timings and comfortable-range limits.
+- `pnpm test`: 188 passing checks across 9 files. New coverage reproduces quiet voice-like input with harmonics, vibrato and breath noise; opposite-phase stereo channel selection; extended 55–1318 Hz synthetic pitches; all 30 correct/wrong references; unique exercise patterns, bounded timings and comfortable-range limits.
 - `pnpm typecheck`: passed.
 - `pnpm build`: passed production build.
 - Production browser suite: 30 tests passed (15 desktop + 15 mobile), followed by 2 additional passing exercise-library tests. Every one of the 30 exercises was opened, its reference played, and its generated target recording genuinely decoded/scored on both layouts. Search, categories, empty search and restricted-range controls passed separately.
@@ -47,3 +47,5 @@ BYOK unit checks cover rejection of missing visitor credentials despite an opera
 - Home opens without a profile popup. Blue light/dark screens passed accessibility scans and horizontal-overflow checks. Desktop and mobile screenshots were visually inspected.
 
 These checks use generated signals and Chromium mobile emulation. They do not establish performance for every physical phone microphone, Safari/iOS codec, or real singing voice. No personal microphone or live provider key was used. Human-device checks above remain relevant.
+
+Hosted release verification: all 34 tests passed against https://musecoach.vercel.app/ on 20 October 2026 (17 desktop + 17 mobile, 5 minutes). This includes MP4/AAC recording and decoding in supported Chromium, as well as WebM/Opus. The deployed application is GitHub commit 0827668, confirmed successful by Vercel. A first overlapping test run encountered shared diagnostic-file cleanup conflicts; the clean sequential run used its own output directory and passed in full.

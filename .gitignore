@@ -3,6 +3,7 @@ node_modules/
 .next/
 .vercel/
 test-results/
+test-results-hosted/
 playwright-report/
 artifacts/
 .env*

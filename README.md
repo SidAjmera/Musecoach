@@ -33,7 +33,7 @@ pnpm test:e2e     # Production build must exist; starts a server when needed
 
 The build uses webpack for compatibility with this Windows environment. The test configuration uses locally installed Chrome; install Chrome or change `channel` in `playwright.config.ts` to a Playwright-managed browser. Tests use generated PCM WAV fixtures and Chrome's fake microphone flags. They never request a physical microphone. Browser traces and failure details go to `test-results/`; visual snapshots go to `artifacts/`.
 
-Set `PLAYWRIGHT_BASE_URL=https://musecoach.vercel.app` when running browser checks against the hosted site. This skips starting a local server and uses the public HTTPS origin. The browser checks use disposable profiles, generated audio fixtures, and mocked provider replies; no real API keys are needed.
+Set `PLAYWRIGHT_BASE_URL=https://musecoach.vercel.app` when running browser checks against the hosted site. This skips starting a local server and uses the public HTTPS origin. Use `pnpm test:e2e --output=test-results-hosted` for a separate hosted diagnostics directory, and run browser suites sequentially. The browser checks use disposable profiles, generated audio fixtures, and mocked provider replies; no real API keys are needed.
 
 ## What works
 
