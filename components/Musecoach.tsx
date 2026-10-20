@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -52,6 +52,7 @@ import PracticePlan from "./PracticePlan";
 import ExerciseDesigner from "./ExerciseDesigner";
 import { readDesignedExercise } from "@/lib/designed-exercise";
 import { practicePlan } from "@/lib/practice-plan";
+import ProgressExport from "./ProgressExport";
 const navigation = [
   { path: "/", label: "Home", icon: House },
   { path: "/record", label: "Record & Review", icon: Mic },
@@ -70,6 +71,7 @@ export default function Musecoach() {
     [error, setError] = useState(""),
     [confirm, setConfirm] = useState<"all" | "session" | "audio" | null>(null),
     [notice, setNotice] = useState("");
+  const previousPath = useRef<string | null>(null);
   useEffect(() => {
     try {
       const p = readProfile();
@@ -94,7 +96,11 @@ export default function Musecoach() {
   }, [notice]);
   useEffect(() => {
     window.speechSynthesis?.cancel();
-    document.getElementById("page-title")?.focus();
+    const practiceSelection =
+      previousPath.current?.startsWith("/practice") &&
+      path.startsWith("/practice");
+    previousPath.current = path;
+    if (!practiceSelection) document.getElementById("page-title")?.focus();
   }, [path]);
   function updateProfile(p: Profile) {
     try {
@@ -122,7 +128,7 @@ export default function Musecoach() {
     base = Number(parts[2]),
     recommended = practicePlan(sessions, profile).exercises[0] || "hold";
   function practice(k: ExerciseKind) {
-    router.push(`/practice/${k}`);
+    router.push(`/practice/${k}`, { scroll: !path.startsWith("/practice") });
   }
   async function onSave(session: Session, blob?: Blob) {
     await saveSession(session, blob);
@@ -681,6 +687,26 @@ function Practice({
     ),
     [error, setError] = useState("");
   const current = exerciseInfo[selected];
+  const challengeHeading = useRef<HTMLHeadingElement>(null);
+  function revealChallenge() {
+    challengeHeading.current?.focus({ preventScroll: true });
+    challengeHeading.current
+      ?.closest("section")
+      ?.scrollIntoView({ block: "start", behavior: "auto" });
+  }
+  // The route can replace the page after the optimistic selection has rendered.
+  // Restore the destination heading on the completed route as well.
+  useEffect(() => {
+    if (!exerciseKinds.includes(kind)) return;
+    const frame = requestAnimationFrame(revealChallenge);
+    return () => cancelAnimationFrame(frame);
+  }, [kind]);
+  function choose(kind: ExerciseKind) {
+    setSelected(kind);
+    onSelect(kind);
+    setError("");
+    requestAnimationFrame(revealChallenge);
+  }
   useEffect(() => setSelected(routeSelection), [routeSelection]);
   useEffect(() => {
     setBase((value) =>
@@ -692,15 +718,7 @@ function Practice({
   }, [selected, profile.low, profile.high]);
   return (
     <>
-      <PracticePlan
-        sessions={sessions}
-        profile={profile}
-        onChoose={(kind) => {
-          setSelected(kind);
-          onSelect(kind);
-          setError("");
-        }}
-      />
+      <PracticePlan sessions={sessions} profile={profile} onChoose={choose} />
       <ExerciseDesigner
         sessions={sessions}
         profile={profile}
@@ -709,17 +727,15 @@ function Practice({
       <ExerciseLibrary
         selected={selected}
         profile={profile}
-        onSelect={(kind) => {
-          setSelected(kind);
-          onSelect(kind);
-          setError("");
-        }}
+        onSelect={choose}
       />
       <div className="practice-studio">
         <section className={`panel exercise-main practice-${selected}`}>
           <span className="exercise-doodle">{current.icon}</span>
           <span className="eyebrow">A SMALL CHALLENGE · 18 SECONDS</span>
-          <h2>{current.name}</h2>
+          <h2 ref={challengeHeading} tabIndex={-1}>
+            {current.name}
+          </h2>
           <p>{current.description}</p>
           <div className="exercise-steps">
             <div>
@@ -733,7 +749,7 @@ function Practice({
             </div>
           </div>
           <label className="target-selector">
-            Starting note{" "}
+            Base note{" "}
             <select
               value={base}
               onChange={(e) => setBase(Number(e.target.value))}
@@ -753,6 +769,10 @@ function Practice({
               ))}
             </select>
           </label>
+          <p className="small muted">
+            The base anchors the pattern. Descending patterns can begin on a
+            higher note; the reference shows every target.
+          </p>
           <p className="small muted">
             {profile.rangeSet
               ? `Your ${profile.rangeProvisional ? "provisional " : ""}range`
@@ -918,6 +938,7 @@ function Progress({
           </div>
         )}
       </section>
+      <ProgressExport sessions={sessions} />
       <div className="history-footer">
         <p className="small muted">
           History belongs to this browser and device. Clearing browser data may

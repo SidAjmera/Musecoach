@@ -43,7 +43,7 @@ export default function ProgressTrend({ sessions }: { sessions: Session[] }) {
     <section className="panel">
       <h3>Compare like with like</h3>
       <p className="small muted">
-        Only the same exercise, starting note, timing, and analysis version are
+        Only the same exercise, base note, timing, and analysis version are
         comparable. Free-singing takes are not ranked against different songs.
       </p>
       {groups.length ? (

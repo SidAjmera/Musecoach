@@ -39,7 +39,8 @@ export type ExerciseKind =
   | "long-short"
   | "offbeat"
   | "rest-reset"
-  | "descending-thirds";
+  | "descending-thirds"
+  | keyof typeof import("./extra-exercises").extraExercises;
 export interface Profile {
   name: string;
   experience: string;

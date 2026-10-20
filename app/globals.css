@@ -3268,3 +3268,6 @@ details p {
   font-size: 11px;
   color: var(--muted);
 }
+.exercise-main {
+  scroll-margin-top: 95px;
+}

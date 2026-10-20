@@ -42,7 +42,7 @@ Set `PLAYWRIGHT_BASE_URL=https://musecoach.vercel.app` when running browser chec
 - Explicit microphone start, live RMS input meter, timer, stop/discard/retry, automatic 60-second stop, and an 18-second automatic stop for guided exercises. Tracks, analysis workers, reference tones, playback URLs, and AudioContexts are released on the relevant lifecycle boundaries. Microphone input is never connected to an output destination.
 - Upload WAV, MP3, M4A, OGG, or WebM up to 25 MiB. Actual decoding is browser-dependent; duration must be 15–60 seconds (150 ms codec-padding tolerance). Empty, malformed, oversized, too-short, and too-long files produce recovery instructions. Playback happens before explicit analysis submission.
 - Genuine local pitch measurements in a Web Worker, explained scores, confidence gaps, raw metrics, timestamped observations, a pitch timeline, recording-quality cautions, and measured exercise recommendations.
-- Thirty searchable exercises across Basics, Scales, Intervals, Arpeggios, Phrases, and Timing. Each has a defined pitch and timing reference; wider patterns are unavailable when outside the user's comfortable range. Targets stay within the user's practice window. Reference playback is labelled as synthesised tones. Capture uses a three-beat count-in, visual target prompts, and quiet gaps. The reference is played separately from the singing capture.
+- One hundred searchable exercises across Basics, Scales, Intervals, Arpeggios, Phrases, and Timing. Each has a defined pitch and timing reference; wider patterns are unavailable when outside the user's comfortable range. Targets stay within the user's practice window. Reference playback is labelled as synthesised tones. Capture uses a three-beat count-in, visual target prompts, and quiet gaps. The reference is played separately from the singing capture.
 - A live microphone check shows detected note, frequency, cents, and input level before recording. It records and uploads nothing; stopping or leaving releases the microphone.
 - Saved audio can be reanalysed with the latest detector without duplicating the session. Select and loop a phrase for focused listening, or download the original saved audio.
 - Guided range exploration, with an explicit choice to adopt the detected window as provisional. It is never a voice classification.
@@ -51,16 +51,13 @@ Set `PLAYWRIGHT_BASE_URL=https://musecoach.vercel.app` when running browser chec
 
 ## Version 2 additions
 
+- **100 defined exercises:** The original 30 are retained and expanded with 70 fixed musical references across Basics, Scales, Intervals, Arpeggios, Phrases, and Timing. Search and category filters keep the library manageable. Every reference stays within the chosen range, and selecting one brings its controls into view with keyboard focus. The Base note control anchors the pattern; descending references may begin above that base.
+- **Progress CSV export:** Progress can download chronological session summaries and supported measurements for use in a spreadsheet. Missing values stay blank, and user-entered titles are escaped against spreadsheet formulas. The file includes session titles and dates; it excludes audio, conversations and API credentials and is generated locally.
+
 - **Targeted practice focus:** Practice suggests exercises using the lowest supported median skill indicator from up to five recent takes with the current detector. It shows evidence links and latest measured pointers, respects range limits, and offers a baseline or input recovery when evidence is insufficient. It requires no API key. This is guidance across recent practice; it does not rank different exercises as progress.
 
 - **AI exercise design:** In Practice, choose Design my exercise. The selected coach uses measured summaries, explicit goals, comfortable range and improvement pointers through the visitor's existing AI connection. With no key, the app offers Add API key or Continue without AI. Declining clearly explains that AI design is unavailable and retains the measured practice focus above. There are no automatic provider calls when adding a key.
 - Generated exercises contain 2–10 defined, separated notes inside the current range, at least five seconds of target singing, and an 18-second total including count-in. The server and browser reject invalid targets before use. Choose Use this exercise to retain the latest draft in this browser and open the recorder. Range changes trigger validation again. Synthesised reference playback, uploads, worker scoring, saved reviews, and comparisons use the actual generated reference; AI text never becomes a measured score.
-
-## Version 2 roadmap
-
-These are planned features, not currently available:
-
-- Expand the practice library from 30 to 100 exercises, with defined references and tested scoring for each exercise.
 
 ## Analysis and score definitions
 

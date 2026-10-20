@@ -167,10 +167,10 @@ test("saved failed takes can be reanalysed, looped and downloaded without losing
   await expect(page.getByRole("link", { name: /Free singing/ })).toHaveCount(1);
 });
 
-test("all 30 exercises have playable references and genuinely scored targets", async ({
+test("all 100 exercises have playable references and genuinely scored targets", async ({
   page,
 }) => {
-  test.setTimeout(240000);
+  test.setTimeout(600000);
   await page.goto("/practice");
   for (const kind of exerciseKinds) {
     const label = exerciseInfo[kind].label;
@@ -178,7 +178,7 @@ test("all 30 exercises have playable references and genuinely scored targets", a
     await expect(
       page.getByRole("button", { name: label, exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
-    await page.getByLabel("Starting note").selectOption("60");
+    await page.getByLabel("Base note").selectOption("60");
     await page
       .getByRole("button", { name: "Open exercise", exact: true })
       .click();

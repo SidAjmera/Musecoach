@@ -1,4 +1,5 @@
 import { Exercise, ExerciseKind, Profile } from "./types";
+import { extraExercises } from "./extra-exercises";
 export interface ExerciseDefinition {
   name: string;
   label: string;
@@ -279,6 +280,7 @@ export const exerciseInfo: Record<ExerciseKind, ExerciseDefinition> = {
     "Descending interval shape",
     [7, 4, 5, 2, 4, 0],
   ),
+  ...extraExercises,
 };
 export const exerciseKinds = Object.keys(exerciseInfo) as ExerciseKind[];
 export const exerciseCategories = [

@@ -7,7 +7,7 @@ import {
 } from "../../lib/exercises";
 import { defaultProfile } from "../../lib/types";
 
-describe("30-exercise library", () => {
+describe("100-exercise library", () => {
   it("never adopts an inverted or unsupported provisional practice window", () => {
     expect(provisionalPracticeWindow([33, 35])).toBeUndefined();
     expect(provisionalPracticeWindow([89, 91])).toBeUndefined();
@@ -16,12 +16,18 @@ describe("30-exercise library", () => {
     expect(provisionalPracticeWindow([80, 92])).toEqual([80, 88]);
     expect(provisionalPracticeWindow([55.2, 62.8])).toEqual([56, 62]);
   });
-  it("contains 30 distinct musical references, not renamed duplicates", () => {
-    expect(exerciseKinds).toHaveLength(30);
+  it("contains 100 distinct musical references, not renamed duplicates", () => {
+    expect(exerciseKinds).toHaveLength(100);
     const references = exerciseKinds.map((kind) =>
       JSON.stringify(makeExercise(kind, 60, defaultProfile).targets),
     );
-    expect(new Set(references).size).toBe(30);
+    const duplicates = exerciseKinds.filter(
+      (_, index) => references.indexOf(references[index]) !== index,
+    );
+    expect(
+      new Set(references).size,
+      `Duplicate references: ${duplicates.join(", ")}`,
+    ).toBe(100);
   });
   it.each(exerciseKinds)("keeps %s playable and non-overlapping", (kind) => {
     const exercise = makeExercise(kind, 60, defaultProfile);

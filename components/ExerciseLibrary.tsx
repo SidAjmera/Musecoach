@@ -33,7 +33,7 @@ export default function ExerciseLibrary({
       <div className="section-heading">
         <div>
           <span className="eyebrow">YOUR PRACTICE LIBRARY</span>
-          <h3>30 ways to explore your voice.</h3>
+          <h3>{exerciseKinds.length} ways to explore your voice.</h3>
         </div>
         <span className="tag">18 seconds each</span>
       </div>

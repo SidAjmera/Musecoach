@@ -1,6 +1,7 @@
 node_modules/
 .pnpm-store/
 .next/
+.next-*/
 .vercel/
 test-results/
 test-results-hosted/

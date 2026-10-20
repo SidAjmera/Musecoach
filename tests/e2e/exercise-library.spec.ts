@@ -13,7 +13,7 @@ test("exercise search, categories and comfortable-range restrictions work", asyn
   );
   await page.goto("/practice");
   const library = page.getByRole("region", { name: "Exercise library" });
-  await expect(library.getByRole("status")).toHaveText("30 of 30 exercises");
+  await expect(library.getByRole("status")).toHaveText("100 of 100 exercises");
   await page.getByLabel("Search exercises").fill("third");
   await expect(
     library.getByRole("button", { name: "Minor-third echoes", exact: true }),
@@ -25,7 +25,7 @@ test("exercise search, categories and comfortable-range restrictions work", asyn
   await expect(library.getByText(/No exercises match/)).toBeVisible();
   await page.getByLabel("Search exercises").fill("");
   await page.getByLabel("Exercise focus").selectOption("Timing");
-  await expect(library.getByRole("status")).toHaveText("4 of 30 exercises");
+  await expect(library.getByRole("status")).toHaveText("16 of 100 exercises");
   await page.getByLabel("Exercise focus").selectOption("all");
   await expect(
     library.getByRole("button", { name: "Octave echoes", exact: true }),
@@ -108,6 +108,8 @@ test("practice focus uses measured timing and opens its evidence", async ({
   await expect(
     page.getByRole("button", { name: "Short note pulses", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
+  await expect(page).toHaveURL(/\/practice\/short-pulses$/);
+  await expect(page.locator(".exercise-main h2")).toBeFocused();
   await focus
     .getByText("Keep your latest pointers in mind", { exact: true })
     .click();

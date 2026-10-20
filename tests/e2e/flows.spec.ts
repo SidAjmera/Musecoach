@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 const fixtureDir = join(process.cwd(), "test-results", "fixtures");
@@ -88,7 +88,7 @@ test("complete onboarding → upload → review → exercise → history, reload
     .click();
   await page.getByRole("link", { name: "Practice", exact: true }).click();
   await page.getByRole("button", { name: "Match a note", exact: true }).click();
-  await page.getByLabel("Starting note").selectOption("60");
+  await page.getByLabel("Base note").selectOption("60");
   await page.getByRole("button", { name: "Open exercise" }).click();
   await expect(
     page.getByRole("button", { name: "Play reference tones" }),
@@ -106,7 +106,7 @@ test("complete onboarding → upload → review → exercise → history, reload
   // Repeat the identical reference so progress is based on genuinely comparable attempts.
   await page.getByRole("link", { name: "Practice", exact: true }).click();
   await page.getByRole("button", { name: "Match a note", exact: true }).click();
-  await page.getByLabel("Starting note").selectOption("60");
+  await page.getByLabel("Base note").selectOption("60");
   await page.getByRole("button", { name: "Open exercise" }).click();
   await upload(page, exercise);
   await page.getByRole("button", { name: "Review my take" }).click();
@@ -135,6 +135,17 @@ test("complete onboarding → upload → review → exercise → history, reload
   await expect(page.getByText("Saved takes", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: /Free singing/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Match a note/ })).toHaveCount(2);
+  const csvDownload = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download progress CSV", exact: true })
+    .click();
+  const csv = await csvDownload;
+  expect(csv.suggestedFilename()).toMatch(/^musecoach-progress-.*\.csv$/);
+  const exported = readFileSync((await csv.path())!, "utf8");
+  expect(exported).toContain('"practice_score_out_of_100"');
+  expect(exported).toContain('"Free singing"');
+  expect(exported).toContain('"Guided exercise"');
+  expect(exported.trim().split("\r\n")).toHaveLength(4);
   await page.reload();
   await expect(page.getByRole("link", { name: /Match a note/ })).toHaveCount(2);
   await expect(
@@ -376,7 +387,7 @@ test("main screens have accessible layouts, keyboard focus, and visual snapshots
       fullPage: true,
     });
     if (name === "practice") {
-      await page.getByLabel("Starting note").selectOption("72");
+      await page.getByLabel("Base note").selectOption("72");
       await page
         .getByRole("button", { name: "Follow a short melody", exact: true })
         .click();
@@ -386,14 +397,21 @@ test("main screens have accessible layouts, keyboard focus, and visual snapshots
       ).toBeVisible();
       await expect
         .poll(async () =>
-          Number(await page.getByLabel("Starting note").inputValue()),
+          Number(await page.getByLabel("Base note").inputValue()),
         )
         .toBeLessThanOrEqual(68);
       expect(
-        Number(await page.getByLabel("Starting note").inputValue()),
+        Number(await page.getByLabel("Base note").inputValue()),
       ).toBeGreaterThanOrEqual(48);
       await expect(page).toHaveTitle(/Musecoach/);
     }
+    if (name === "progress")
+      await expect(
+        page.getByRole("button", {
+          name: "Download progress CSV",
+          exact: true,
+        }),
+      ).toBeDisabled();
     const scan = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
       .analyze();
