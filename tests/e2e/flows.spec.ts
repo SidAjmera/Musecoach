@@ -205,7 +205,7 @@ test("invalid duration, silence, missing AI, coach switching, keyboard and layou
   await page.getByRole("button", { name: "Review my take" }).click();
   await expect(
     page.getByRole("heading", {
-      name: "A little more sound, a clearer picture.",
+      name: "Let’s look at your recording.",
     }),
   ).toBeVisible({ timeout: 30000 });
   await expect(page.getByText("Too little usable pitched audio")).toBeVisible();
@@ -242,7 +242,7 @@ test("invalid duration, silence, missing AI, coach switching, keyboard and layou
   await page.getByRole("link", { name: /Free singing/ }).click();
   await expect(
     page.getByRole("heading", {
-      name: "A little more sound, a clearer picture.",
+      name: "Let’s look at your recording.",
     }),
   ).toBeVisible();
 });

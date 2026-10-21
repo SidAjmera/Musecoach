@@ -57,7 +57,7 @@ export function practicePlan(
     },
     {
       key: "stability",
-      label: "Sustained-note steadiness",
+      label: "Pitch steadiness",
       kinds: ["hold", "match", "do-re-mi"],
     },
     {

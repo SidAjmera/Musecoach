@@ -126,9 +126,9 @@ export function PitchChart({ analysis }: { analysis: Analysis }) {
       )}
       {pitched.length > 0 && analysis.score === null && !analysis.exercise && (
         <p className="small muted">
-          Pitch is shown above. A steadiness score needs at least three
-          sustained windows; short notes and slides can still appear on the
-          graph. Try Hold a note for a scored reference.
+          Pitch is shown above. Scoring needs enough confident note segments;
+          isolated points and continuous slides can still appear on the graph.
+          The explanation below describes what this take is missing.
         </p>
       )}
     </div>
@@ -255,7 +255,7 @@ export default function Review({
           <span className="eyebrow">YOUR TAKE, EXPLAINED</span>
           <h2>
             {a.score === null
-              ? "A little more sound, a clearer picture."
+              ? "Let’s look at your recording."
               : "Every take tells you something."}
           </h2>
           <p>{measuredIntro(profile, a.score)}</p>
@@ -280,6 +280,14 @@ export default function Review({
           </strong>
         )}
       </div>
+      {a.score === null && (
+        <div className="notice small" role="status">
+          <p>
+            {a.voicedSeconds.toFixed(1)} seconds of confident pitch detected in
+            this {a.duration.toFixed(1)}-second recording. {a.formula}
+          </p>
+        </div>
+      )}
       <section className="panel">
         <div className="section-heading">
           <h3>Listen back</h3>
@@ -439,9 +447,12 @@ export default function Review({
         <details>
           <summary>How the score is calculated</summary>
           <p className="small">{a.formula}</p>
+          <p className="small">
+            Scores are calculated on this device and do not require an API key.
+          </p>
           <p className="small muted">
-            {a.version === "yin-1.0"
-              ? "This take uses the older detector. Reanalyse saved audio to use improved quiet-input detection."
+            {a.version !== "yin-1.2"
+              ? "This take uses older analysis. Reanalyse saved audio to use current quiet-input detection and short-note scoring."
               : "Confidence threshold 0.80; quiet-input floor 0.0001 RMS; 55–1400 Hz detector."}{" "}
             Recording gain affects loudness. Confidence means periodic audio,
             not proof of a human voice. No reliable inference about breath

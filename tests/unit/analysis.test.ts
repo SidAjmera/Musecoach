@@ -125,6 +125,39 @@ describe("confidence-filtered YIN", () => {
     expect(result.observations[0].time).toBeGreaterThanOrEqual(0);
     expect(result.range![0]).toBeCloseTo(57);
   });
+  it("scores a 19-second melody with short notes and breaths without a reference", () => {
+    const frames = Array.from({ length: 380 }, (_, i) => {
+      const note = Math.floor(i / 6),
+        voiced = i % 6 < 5;
+      return {
+        time: i * 0.05,
+        hz: voiced
+          ? midiHz(55 + [0, 4, 7, 2, 5][note % 5] + (i % 2 ? 0.12 : -0.12))
+          : null,
+        confidence: voiced ? 0.99 : 0,
+        rms: voiced ? 0.003 : 0,
+      };
+    });
+    const result = summarize(frames, 19, 0);
+    expect(result.score).toBeGreaterThan(70);
+    expect(result.score).toBeLessThan(100);
+    expect(result.metrics.find((m) => m.key === "stability")?.label).toBe(
+      "Short-note steadiness",
+    );
+    expect(result.formula).toContain("not melody correctness");
+    expect(result.observations[0].text).toContain("0.2 seconds");
+  });
+  it("does not fill gaps with short-note evidence or accept low-confidence pitch", () => {
+    for (const lowConfidence of [false, true]) {
+      const frames = Array.from({ length: 380 }, (_, i) => ({
+        time: i * 0.05,
+        hz: lowConfidence || i % 2 === 0 ? 220 : null,
+        confidence: lowConfidence ? 0.3 : i % 2 === 0 ? 0.99 : 0,
+        rms: 0.2,
+      }));
+      expect(summarize(frames, 19, 0).score).toBeNull();
+    }
+  });
   it("produces identical measurements for all ten coach personalities and three versions", () => {
     const frames = Array.from({ length: 300 }, (_, i) => ({
       time: i * 0.05,

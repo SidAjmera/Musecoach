@@ -1,6 +1,6 @@
 import { Analysis, Exercise, PitchFrame } from "./types";
 import { hzMidi, noteName, isSequenceExercise } from "./exercises";
-export const ANALYSIS_VERSION = "yin-1.1";
+export const ANALYSIS_VERSION = "yin-1.2";
 export const PITCH_CONFIDENCE = 0.8;
 export const quantile = (values: number[], p: number) => {
   const s = [...values].sort((a, b) => a - b);
@@ -155,12 +155,16 @@ export function summarize(
     value: Math.round((quantile(db, 0.9) - quantile(db, 0.1)) * 10) / 10,
     unit: "dB (10–90%)",
   });
-  const stable: { time: number; dev: number }[] = [];
+  let stable: { time: number; dev: number }[] = [];
   for (let i = 0; i + 11 < frames.length; i += 6) {
     const chunk = frames.slice(i, i + 12);
-    if (chunk.filter((f) => f.hz !== null).length < 11) continue;
+    if (
+      chunk.filter((f) => f.hz !== null && f.confidence >= PITCH_CONFIDENCE)
+        .length < 11
+    )
+      continue;
     const p = chunk
-      .filter((f) => f.hz !== null)
+      .filter((f) => f.hz !== null && f.confidence >= PITCH_CONFIDENCE)
       .map((f) => hzMidi(f.hz!) * 100);
     if (quantile(p, 0.9) - quantile(p, 0.1) > 180) continue;
     const center = quantile(p, 0.5);
@@ -172,6 +176,34 @@ export function summarize(
       ),
     });
   }
+  // Melodies often change notes faster than the sustained-note window. Use
+  // non-overlapping short windows only when sustained evidence is unavailable.
+  // Require 1.5 seconds of eligible windows; never bridge gaps or treat note
+  // changes and continuous slides as steady notes.
+  let shortNotes = false;
+  if (stable.length < 3 && !exercise) {
+    const short: { time: number; dev: number }[] = [];
+    for (let i = 0; i + 3 < frames.length; i += 4) {
+      const chunk = frames.slice(i, i + 4);
+      if (chunk.some((f) => f.hz === null || f.confidence < PITCH_CONFIDENCE))
+        continue;
+      const p = chunk.map((f) => hzMidi(f.hz!) * 100);
+      if (Math.max(...p) - Math.min(...p) > 100) continue;
+      const sorted = [...p].sort((a, b) => a - b);
+      const center = (sorted[1] + sorted[2]) / 2;
+      const deviations = p
+        .map((v) => Math.abs(v - center))
+        .sort((a, b) => a - b);
+      short.push({
+        time: chunk[0].time,
+        dev: (deviations[1] + deviations[2]) / 2,
+      });
+    }
+    if (short.length * 4 * hop >= 1.5) {
+      stable = short;
+      shortNotes = true;
+    }
+  }
   if (stable.length >= 3) {
     const dev = quantile(
         stable.map((s) => s.dev),
@@ -180,28 +212,30 @@ export function summarize(
       score = Math.round(Math.max(0, 100 - dev));
     result.metrics.push({
       key: "stability",
-      label: "Sustained-note steadiness",
+      label: shortNotes ? "Short-note steadiness" : "Sustained-note steadiness",
       value: Math.round(dev * 10) / 10,
       unit: "cents median deviation",
       score,
     });
     result.score = score;
-    result.formula =
-      "Practice indicator = 100 − median absolute pitch deviation in cents, clamped to 0–100. Only ≥0.6-second near-steady windows count. This describes steadiness, not melody correctness or talent.";
+    const windowSeconds = shortNotes ? 4 * hop : 12 * hop;
+    result.formula = shortNotes
+      ? "Short-note steadiness = 100 − median window pitch deviation in cents, clamped to 0–100. Uses non-overlapping 0.2-second confident windows spanning at most 100 cents, with at least 1.5 seconds of eligible windows. This measures local steadiness, not melody correctness or talent; expressive slides and vibrato can be intentional."
+      : "Practice indicator = 100 − median absolute pitch deviation in cents, clamped to 0–100. Only ≥0.6-second near-steady windows count. This describes steadiness, not melody correctness or talent.";
     const best = [...stable].sort((a, b) => a.dev - b.dev)[0];
     result.observations.push({
       time: best.time,
-      text: `A steady window: ${best.dev.toFixed(1)} cents median deviation over 0.6 seconds.`,
+      text: `A steady window: ${best.dev.toFixed(1)} cents median deviation over ${windowSeconds.toFixed(1)} seconds.`,
     });
     result.strengths.push(
-      `We found ${stable.length} near-steady windows with a median deviation of ${dev.toFixed(1)} cents.`,
+      `We found ${stable.length} ${shortNotes ? "short-note" : "sustained-note"} windows with a median deviation of ${dev.toFixed(1)} cents.`,
     );
     result.improvements.push(
       "Explore a gentle held note, then compare its movement. Vibrato and expressive slides can be intentional.",
     );
   } else {
     result.formula =
-      "No free-singing indicator: fewer than three usable near-steady windows. Try the hold-a-note exercise for a defined comparison.";
+      "No steadiness score: fewer than three sustained-note windows and less than 1.5 seconds of usable short-note windows. Detected pitch can still be graphed; continuous slides and fragmented pitch do not provide enough note-level steadiness evidence. Try the hold-a-note exercise for a defined comparison.";
     result.improvements.push(
       "Try holding a comfortable note to give the detector a clearer sustained sample.",
     );

@@ -7,9 +7,9 @@ import {
 } from "../../lib/exercises";
 import { defaultProfile, type Exercise } from "../../lib/types";
 
-function voiceWav(stereo = false, exercise?: Exercise) {
+function voiceWav(stereo = false, exercise?: Exercise, melody = false) {
   const rate = 16000,
-    seconds = exercise ? 18 : 16,
+    seconds = exercise ? 18 : melody ? 19 : 16,
     channels = stereo ? 2 : 1;
   const data = Buffer.alloc(44 + rate * seconds * channels * 2);
   data.write("RIFF");
@@ -33,10 +33,16 @@ function voiceWav(stereo = false, exercise?: Exercise) {
       );
     const hz = target
       ? midiHz(target.midi)
-      : 196 * 2 ** ((25 * Math.sin(2 * Math.PI * 5 * time)) / 1200);
+      : melody
+        ? midiHz(55 + [0, 4, 7, 2, 5][Math.floor(time / 0.3) % 5])
+        : 196 * 2 ** ((25 * Math.sin(2 * Math.PI * 5 * time)) / 1200);
     phase += (2 * Math.PI * hz) / rate;
     seed = (1664525 * seed + 1013904223) >>> 0;
-    const active = exercise ? !!target : time % 2.2 < 1.8;
+    const active = exercise
+      ? !!target
+      : melody
+        ? time % 0.3 < 0.25
+        : time % 2.2 < 1.8;
     const sample = active
       ? Math.round(
           32767 *
@@ -52,6 +58,30 @@ function voiceWav(stereo = false, exercise?: Exercise) {
   }
   return { name: "quiet-voice.wav", mimeType: "audio/wav", buffer: data };
 }
+
+test("19-second short-note singing receives a local score without an API key", async ({
+  page,
+}) => {
+  const aiRequests: string[] = [];
+  page.on("request", (request) => {
+    if (
+      /\/api\/(coach|exercise)/.test(request.url()) &&
+      request.method() === "POST"
+    )
+      aiRequests.push(request.url());
+  });
+  await page.goto("/record");
+  await review(page, voiceWav(false, undefined, true), true);
+  await expect(
+    page.getByText("Short-note steadiness", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".score-circle strong")).toHaveText(/^\d+$/);
+  await page.getByText("How the score is calculated", { exact: true }).click();
+  await expect(page.getByText(/Short-note steadiness =/)).toBeVisible();
+  await page.reload();
+  await expect(page.locator(".score-circle strong")).toHaveText(/^\d+$/);
+  expect(aiRequests).toEqual([]);
+});
 async function review(
   page: Page,
   fixture: ReturnType<typeof voiceWav>,
