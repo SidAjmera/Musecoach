@@ -340,6 +340,6 @@ export function makeExercise(
 }
 export function exerciseKey(e?: Exercise) {
   return e
-    ? `${e.kind}:${e.base}:${e.targets.map((t) => `${t.start}/${t.duration}/${t.midi}`).join(",")}`
+    ? `${e.kind}:${e.base}:${e.song?.id || ""}:${e.targets.map((t) => `${t.start}/${t.duration}/${t.midi}`).join(",")}`
     : "free";
 }

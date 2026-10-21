@@ -351,6 +351,9 @@ test("fake microphone capture, stop, and navigation release tracks", async ({
 test("main screens have accessible layouts, keyboard focus, and visual snapshots", async ({
   page,
 }, testInfo) => {
+  // This case visits and scans all main screens in both themes and saves
+  // full-page images. Allow time for those checks on slower Windows machines.
+  test.setTimeout(180000);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   for (const [path, name] of [

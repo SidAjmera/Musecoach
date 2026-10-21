@@ -19,8 +19,9 @@ import { validateUpload, microphoneError } from "@/lib/validation";
 import { Exercise, Session } from "@/lib/types";
 import { noteName, exerciseInfo } from "@/lib/exercises";
 import PitchTuner from "./PitchTuner";
+import { exerciseSpeeds, withTempo } from "@/lib/exercise-tempo";
 export default function Recorder({
-  exercise,
+  exercise: reference,
   rangeExploration = false,
   onSave,
 }: {
@@ -28,6 +29,8 @@ export default function Recorder({
   rangeExploration?: boolean;
   onSave: (session: Session, blob?: Blob) => Promise<void>;
 }) {
+  const [speed, setSpeed] = useState(1);
+  const exercise = reference ? withTempo(reference, speed) : undefined;
   const [status, setStatus] = useState<
       "idle" | "requesting" | "recording" | "decoding" | "ready" | "analyzing"
     >("idle"),
@@ -203,7 +206,9 @@ export default function Recorder({
                 : "Free singing"}
           </span>
           <span className="small muted">
-            {exercise ? `${exercise.duration}s with count-in` : "15–60 seconds"}
+            {exercise
+              ? `${exercise.duration.toFixed(1)}s with count-in`
+              : "15–60 seconds"}
           </span>
         </div>
         <div
@@ -249,7 +254,13 @@ export default function Recorder({
           {Math.floor(seconds % 60)
             .toString()
             .padStart(2, "0")}
-          <span> / {exercise ? "00:18" : "01:00"}</span>
+          <span>
+            {" "}
+            /{" "}
+            {exercise
+              ? `00:${Math.ceil(exercise.duration).toString().padStart(2, "0")}`
+              : "01:00"}
+          </span>
         </div>
         <div
           className="input-level"
@@ -271,6 +282,37 @@ export default function Recorder({
             ? "Input level · microphone is active"
             : "Your microphone is off"}
         </p>
+        {reference && (
+          <div>
+            <label htmlFor="exercise-speed">Exercise speed</label>
+            <select
+              id="exercise-speed"
+              aria-describedby="exercise-speed-help"
+              value={speed}
+              disabled={busy || !!blob}
+              onChange={(event) => {
+                tones.current?.stop();
+                setSpeed(Number(event.target.value));
+              }}
+            >
+              {exerciseSpeeds
+                .filter((value) => {
+                  const duration = 3 + (reference.duration - 3) / value;
+                  return duration >= 15 && duration <= 60;
+                })
+                .map((value) => (
+                  <option key={value} value={value}>
+                    {Math.round(value * 100)}%{value === 1 ? " · Original" : ""}
+                  </option>
+                ))}
+            </select>
+            <p id="exercise-speed-help" className="small muted">
+              Reference tones, note prompts, recording length and scoring follow
+              this speed. The count-in stays three seconds. Discard a take
+              before changing speed.
+            </p>
+          </div>
+        )}
         <div className="record-actions">
           {status === "recording" ? (
             <button
@@ -406,6 +448,13 @@ export default function Recorder({
           <section className="panel">
             <span className="eyebrow">YOUR REFERENCE</span>
             <h3>{exercise.name || exerciseInfo[exercise.kind].label}</h3>
+            {exercise.source === "song" && (
+              <p className="small muted">
+                Estimated notes from your solo guide. This is not an official
+                song transcription. Sing the guide's phrase after the count-in;
+                recorded uploads must include the same initial three-second gap.
+              </p>
+            )}
             {exercise.source === "ai" && (
               <p className="small muted">
                 AI-designed exercise · measured locally. {exercise.rationale}

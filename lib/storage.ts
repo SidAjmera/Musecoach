@@ -201,4 +201,5 @@ export async function clearData() {
   localStorage.removeItem("musecoach-profile");
   localStorage.removeItem("musecoach-chat");
   localStorage.removeItem("musecoach-designed-exercise");
+  localStorage.removeItem("musecoach-song-reference");
 }

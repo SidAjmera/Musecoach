@@ -340,6 +340,35 @@ main {
   font-size: 11px !important;
   margin-top: 23px;
 }
+.song-results {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}
+.song-results .button {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.song-results .button[aria-pressed="true"] {
+  background: var(--soft-blue);
+  border-color: var(--accent);
+}
+.song-search-form {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+}
+.song-search-form .button {
+  justify-self: start;
+}
+.song-practice audio {
+  width: 100%;
+  margin: 16px 0;
+}
 .button {
   display: inline-flex;
   align-items: center;

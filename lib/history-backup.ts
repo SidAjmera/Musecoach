@@ -128,7 +128,17 @@ function exercise(value: unknown): Exercise {
     ...(e.name === undefined ? {} : { name: text(e.name, 90, false) }),
     ...(e.source === undefined
       ? {}
-      : { source: oneOf(e.source, ["ai"] as const) }),
+      : { source: oneOf(e.source, ["ai", "song"] as const) }),
+    ...(e.speed === undefined ? {} : { speed: number(e.speed, 0.6, 1.2) }),
+    ...(e.song === undefined
+      ? {}
+      : {
+          song: {
+            id: text(object(e.song).id, 36, false),
+            title: text(object(e.song).title, 200, false),
+            artist: text(object(e.song).artist, 200, false),
+          },
+        }),
     ...(e.rationale === undefined
       ? {}
       : { rationale: text(e.rationale, 500, false) }),
@@ -170,7 +180,7 @@ function session(value: unknown): Session {
       ...(m.score === undefined ? {} : { score: number(m.score, 0, 100) }),
     };
   });
-  const observations = list<Observation>(a.observations, 30, (raw) => {
+  const observations = list<Observation>(a.observations, 60, (raw) => {
     const o = object(raw);
     return { time: number(o.time, 0, duration), text: text(o.text, 1600) };
   });

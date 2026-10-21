@@ -53,6 +53,8 @@ import PitchTuner from "./PitchTuner";
 import ExerciseLibrary from "./ExerciseLibrary";
 import PracticePlan from "./PracticePlan";
 import ExerciseDesigner from "./ExerciseDesigner";
+import SongPractice from "./SongPractice";
+import { readSongReference } from "@/lib/song-reference";
 import { readDesignedExercise } from "@/lib/designed-exercise";
 import { practicePlan } from "@/lib/practice-plan";
 import ProgressExport from "./ProgressExport";
@@ -542,6 +544,7 @@ export default function Musecoach() {
               onRange={() => router.push("/record/range")}
               onSelect={practice}
               onDesigned={() => router.push("/record/designed")}
+              onSong={() => router.push("/record/song")}
               onFavorites={(favoriteExercises) => {
                 try {
                   const next = { ...profile, favoriteExercises };
@@ -715,11 +718,13 @@ function RecordingRoute({
   try {
     const valid = exerciseKinds.includes(kind);
     const exercise =
-      (kind as string) === "designed"
-        ? readDesignedExercise(profile)
-        : valid
-          ? makeExercise(kind, Number.isFinite(base) ? base : 60, profile)
-          : undefined;
+      (kind as string) === "song"
+        ? readSongReference(profile)
+        : (kind as string) === "designed"
+          ? readDesignedExercise(profile)
+          : valid
+            ? makeExercise(kind, Number.isFinite(base) ? base : 60, profile)
+            : undefined;
     return (
       <Recorder
         exercise={exercise}
@@ -745,6 +750,7 @@ function Practice({
   onRange,
   onSelect,
   onDesigned,
+  onSong,
   onFavorites,
 }: {
   profile: Profile;
@@ -754,6 +760,7 @@ function Practice({
   onRange: () => void;
   onSelect: (k: ExerciseKind) => void;
   onDesigned: () => void;
+  onSong: () => void;
   onFavorites: (kinds: ExerciseKind[]) => void;
 }) {
   const routeSelection = exerciseKinds.includes(kind) ? kind : "hold";
@@ -795,6 +802,7 @@ function Practice({
   return (
     <>
       <PracticePlan sessions={sessions} profile={profile} onChoose={choose} />
+      <SongPractice profile={profile} onUse={onSong} />
       <ExerciseDesigner
         sessions={sessions}
         profile={profile}

@@ -86,8 +86,9 @@ export function summarize(
     improvements: [],
     observations: [],
     recommendation: "hold",
-    formula:
-      "No score: at least 1.5 seconds of confident pitch and 10% coverage are required.",
+    formula: exercise
+      ? "No exercise score: at least 1.5 seconds of confident pitch, 30% coverage of target interiors and 20 usable target frames are required."
+      : "No score: at least 1.5 seconds of confident pitch and 10% coverage are required.",
     exercise,
   };
   result.metrics.push(
@@ -135,11 +136,12 @@ export function summarize(
     result.warnings.push(
       "Clipping detected. Move farther from the microphone or lower its input gain, then record again.",
     );
-  if (coverage < 0.35)
+  if (coverage < 0.35 && !exercise)
     result.warnings.push(
       "Much of this take has no confident pitch. Try solo singing in a quiet room, closer to your microphone. Accompaniment and noise can confuse the detector.",
     );
-  if (voicedSeconds < 1.5 || coverage < 0.1) {
+  // Guided coverage is relative to defined targets, not intentional rests.
+  if (voicedSeconds < 1.5 || (!exercise && coverage < 0.1)) {
     result.warnings.push(
       "Too little usable pitched audio for a reliable practice score. Silence, speech, or noise may be present.",
     );

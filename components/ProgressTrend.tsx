@@ -64,7 +64,8 @@ export default function ProgressTrend({ sessions }: { sessions: Session[] }) {
                       {s.analysis.exercise?.name ||
                         exerciseInfo[s.context as ExerciseKind].label}{" "}
                       · {noteName(s.analysis.exercise!.base)} ·{" "}
-                      {s.analysis.version}
+                      {Math.round((s.analysis.exercise!.speed || 1) * 100)}%
+                      speed · {s.analysis.version}
                     </option>
                   );
                 })}

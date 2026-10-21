@@ -77,7 +77,9 @@ export interface Exercise {
   targets: Target[];
   duration: number;
   name?: string;
-  source?: "ai";
+  source?: "ai" | "song";
+  speed?: number;
+  song?: { id: string; title: string; artist: string };
   rationale?: string;
 }
 export interface Metric {

@@ -270,6 +270,10 @@ export default function Review({
           "Restored from your backup. Measurements were retained as saved; audio was not included. "}
         {a.exercise?.source === "ai" &&
           "AI-designed targets · scored by the local detector. "}
+        {a.exercise?.source === "song" &&
+          "Song practice · compared with estimated notes from your uploaded solo guide, not an official transcription. "}
+        {a.exercise?.speed &&
+          `${Math.round(a.exercise.speed * 100)}% reference speed. `}
         {session.context === "free"
           ? "Free-singing practice indicator · not an objective rating of talent."
           : "Guided exercise score · compared with a defined reference."}{" "}
