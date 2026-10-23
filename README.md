@@ -2,6 +2,8 @@
 
 ## Shared Workspace
 
+In the combined site, the header shows the active app name. An **All Apps** sidebar replaces the top app tabs, shared account screens use All Apps wording, and sign-in no longer assumes an existing Toolnest account. App headers display their names without workspace breadcrumb prefixes.
+
 Workspace now lives at **workspaceapps.vercel.app**, with an app-independent name for future additions, Musecoach-style blue light/dark themes, a shared header theme toggle, illustrated equal app cards and refreshed account/privacy pages. Both former Workspace addresses stay available for exporting device-only data and shows a migration notice. Browser storage does not move automatically between addresses; sign in again for cloud data or restore an exported review backup and transfer audio explicitly.
 
 Musecoach and Toolnest now have an equal place in [Workspace](https://workspaceapps.vercel.app/), with one Supabase account, an app switcher, shared account settings, account-scoped device data, exports and separate app/account deletion controls. [Musecoach in Workspace](https://workspaceapps.vercel.app/musecoach) adds optional private cloud recordings; the account is shared with [Toolnest in Workspace](https://workspaceapps.vercel.app/toolnest).
