@@ -1,5 +1,15 @@
 # Musecoach
 
+## Shared Workspace
+
+Musecoach and Toolnest now have an equal place in [Workspace](https://sidajmera-workspace.vercel.app/), with one Supabase account, an app switcher, shared account settings, account-scoped device data, exports and separate app/account deletion controls. [Musecoach in Workspace](https://sidajmera-workspace.vercel.app/musecoach) adds optional private cloud recordings; the account is shared with [Toolnest in Workspace](https://sidajmera-workspace.vercel.app/toolnest).
+
+The combined implementation is maintained in the separate [private Workspace repository](https://github.com/SidAjmera/Workspace), locally alongside both original projects in `../Workspace`. Neither application is the parent product. This repository and the original `musecoach.vercel.app` site remain the standalone browser-local version described below. They stay available for exporting existing review backups and original audio. A new website origin cannot automatically read those browser records: restore review backups in Workspace Progress and transfer audio explicitly.
+
+Workspace release two adds independent, opt-in profile and review sync, cloud reviews without audio, revision checks and explicit conflict resolution, and Copy/Move controls between device and private cloud recording storage. Review sync does not upload audio. A move saves the destination before removing source audio, and moving to device excludes automatic re-upload. Release two (1.1.0) is live in the shared Workspace: 547 automated tests, TypeScript, the production build, 22 local browser checks and 22 hosted desktop/mobile checks passed. Its RELEASE_STATUS.md records the executed checks and remaining real-account/device verification.
+
+The shared production encryption secret and the neutral Supabase Site URL/confirmation callback have been configured with approval. Existing standalone callbacks remain allowed. Real-account email delivery, confirmation and authenticated cloud recording checks are still pending.
+
 **Live website:** [musecoach.vercel.app](https://musecoach.vercel.app/) — open this link on desktop or mobile.
 
 A singing practice website for desktop and mobile, built with Next.js, TypeScript, React, Tailwind CSS, Web Audio, MediaRecorder, and IndexedDB. Open the hosted HTTPS link on any supported device; visitors do not need to run a server. Recording, measurements, exercises, and history work without an AI key. Recordings and history stay in each visitor’s browser; optional AI conversations and exercise design use their own provider key.
