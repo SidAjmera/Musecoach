@@ -2,6 +2,8 @@
 
 ## Shared Workspace
 
+The shared home wordmark is **Workspace.**, with a blue period; app pages retain their own app names.
+
 In the combined site, the header shows the active app name inside an app and Workspace elsewhere. The live interface uses American English. An **All Apps** sidebar replaces the top app tabs, shared account screens use All Apps wording, and sign-in no longer assumes an existing Toolnest account. App headers display their names without workspace breadcrumb prefixes.
 
 Workspace now lives at **workspaceapps.vercel.app**, with an app-independent name for future additions, Musecoach-style blue light/dark themes, a shared header theme toggle, illustrated equal app cards and refreshed account/privacy pages. Both former Workspace addresses stay available for exporting device-only data and shows a migration notice. Browser storage does not move automatically between addresses; sign in again for cloud data or restore an exported review backup and transfer audio explicitly.
