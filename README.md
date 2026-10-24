@@ -1,5 +1,9 @@
 # Musecoach
 
+Shared Gmail SMTP setup is prepared in the Toolnest repository but has not been applied or delivery-tested. Existing Supabase invitation and recovery settings are to be preserved. Work is paused at the user's request; the Toolnest repository's RESUME_CHECKPOINT.md records pending work.
+
+Toolnest's next planned feature is API-powered catalog expansion beyond 159 apps; see the Toolnest repository's NEXT_STEPS.md.
+
 ## Shared Workspace
 
 The shared home wordmark is **Workspace.**, with a blue period; app pages retain their own app names.
